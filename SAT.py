@@ -1,4 +1,27 @@
 import copy
+from collections import Counter
+import time
+
+def timeit(f):
+	#decorator used to time functions
+	#works with recursive behavior
+    is_evaluating = False
+    def g(*args):
+        nonlocal is_evaluating
+        if is_evaluating:
+            return f(*args)
+        else:
+            start_time = time.clock()
+            is_evaluating = True
+            try:
+                value = f(*args)
+            finally:
+                is_evaluating = False
+            end_time = time.clock()
+            print(f'time taken for {f.__name__}: {end_time-start_time}')
+            return value
+    return g
+
 
 def getRules():
 	'''
@@ -31,57 +54,82 @@ def readGames(file):
 	rules (see above).
 	'''
 	games = []
+	truthValuesAll = []
 	with open(file, 'r') as f:
 		for game in f:
-			games.append(gameToCnf(game))
+			truthValues, gameRules = gameToCnf(game)
+			games.append(gameRules)
+			truthValuesAll.append(truthValues)
 	return games
 
 
 def gameToCnf(gameString):
 	#Converts game string to CNF rules.
-	#Squars that are filled in are an extra constraint
+	#Squares that are filled in are an extra constraint
 	gameRules = []
 	truthValues = dict()
 	for idx, elem in enumerate(gameString):
 		if elem not in ['.', '\n']:
-			gameRules.append([idx//9+1, idx%9+1, int(elem)])
-			truthValues[elem] = 1
-	return gameRules
+			row = idx//9+1
+			col = idx%9+1
+			val = row*100+col*10+int(elem)
+			gameRules.append([val])
+			truthValues[val] = 1
+	return truthValues, gameRules
 
-
+@timeit
 def solveDp(clauses, truthValues):
 	'''
 	Given a set of rules, (sudoku rules + puzzle)
 	find a solution and return it. 
 	Uses DP algorithm
 	'''
-	
-	#check termination conditions
+
+	#Check termination conditions
 	if not clauses:
 		return 'SAT'
 	if [] in clauses:
 		return 'UNSAT'
 
-	#Simplify clauses
-	for clause in clauses:
-		
-		#check tautology
-		if len(clause==2):
-			if clause[0] == -clause[1]:
+	#If clause contains false element, remove element (since it doesn't affect the clause's value)
+	#If clause contains true element, remove clause (since it's true regardless)
+	for idx1, clause in enumerate(clauses):
+		for elem in enumerate(clause):
+			if truthValues.get(elem) == 1:
 				clauses.remove(clause)
-		#check unit clause
-		if len(clause==1):
-			elem = clause[0]
-			truthValues[elem] = (1,0)[elem<0]
-			clauses.remove(clause)
-		#check purity
-		#TODO
+			if truthValues.get(elem) == 0:
+				clauses[idx1].remove(elem)
+	
+	#Simplify clauses as much as possible
+	done = 0
+	while not done:
+		done = 1
+		for clause in clauses:
+			#check tautology
+			if len(clause)==2:
+				if clause[0] == -clause[1]:
+					done = 0
+					clauses.remove(clause)
+					print('clause removed: ', clause)
+			#check unit clause
+			if len(clause)==1:
+				done = 0
+				if clause[0] > 0:
+					truthValues[clause[0]] = 1
+				else:
+					truthValues[clause[0]] = 0
+				clauses.remove(clause)
+				print('clause removed: ', clause)
+			#check purity
+			#TODO
+			#maybe use a counter
 
-
+	return clauses, truthValues
+	#Backtrack boys
+	#TODO
 
 if __name__ == "__main__":
 	sudokuRules = getRules()
 	games = readGames('test sudokus/1000 sudokus.txt')
-
 	game1 = sudokuRules + games[0]
-	
+	newClauses, newTruthVals = solveDp(game1,{})
