@@ -1,11 +1,4 @@
-
-def solveDp(rules):
-	'''
-	Given a set of rules, (sudoku rules + puzzle)
-	find a solution and return it. 
-	Uses DP algorithm
-	'''
-	
+import copy
 
 def getRules():
 	'''
@@ -14,7 +7,7 @@ def getRules():
 	where each rule is a cnf clause (example: [-112,-113])
 	'''
 	rules = []
-	with open('sudoku-rules.txt', 'r') as f:
+	with open(r'test sudokus/sudoku-rules.txt', 'r') as f:
 		#one rule per line
 		for line in f:
 			rule = line.split()
@@ -48,15 +41,47 @@ def gameToCnf(gameString):
 	#Converts game string to CNF rules.
 	#Squars that are filled in are an extra constraint
 	gameRules = []
+	truthValues = dict()
 	for idx, elem in enumerate(gameString):
 		if elem not in ['.', '\n']:
 			gameRules.append([idx//9+1, idx%9+1, int(elem)])
+			truthValues[elem] = 1
 	return gameRules
+
+
+def solveDp(clauses, truthValues):
+	'''
+	Given a set of rules, (sudoku rules + puzzle)
+	find a solution and return it. 
+	Uses DP algorithm
+	'''
+	
+	#check termination conditions
+	if not clauses:
+		return 'SAT'
+	if [] in clauses:
+		return 'UNSAT'
+
+	#Simplify clauses
+	for clause in clauses:
+		
+		#check tautology
+		if len(clause==2):
+			if clause[0] == -clause[1]:
+				clauses.remove(clause)
+		#check unit clause
+		if len(clause==1):
+			elem = clause[0]
+			truthValues[elem] = (1,0)[elem<0]
+			clauses.remove(clause)
+		#check purity
+		#TODO
+
 
 
 if __name__ == "__main__":
 	sudokuRules = getRules()
-	games = readGames('1000 sudokus.txt')
+	games = readGames('test sudokus/1000 sudokus.txt')
 
 	game1 = sudokuRules + games[0]
 	
