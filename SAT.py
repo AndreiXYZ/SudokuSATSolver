@@ -1,6 +1,8 @@
 import copy
 from collections import Counter
+from itertools import chain
 import time
+
 
 def timeit(f):
 	#decorator used to time functions
@@ -77,17 +79,27 @@ def gameToCnf(gameString):
 			truthValues[val] = 1
 	return truthValues, gameRules
 
+def removeFromCounter(args):
+	if type(args) == list:
+		for elem in args:
+			if elemCounter[elem] > 0:
+				elemCounter[elem] -= 1
+	else:
+		if elemCounter[elem] > 0:
+			elemCounter[elem] -= 1
+
 def removeTautology(clauses):
 	removed = 0
-	clauses = [x for x in clauses if not(len(x)==2 and x[0]==-x[1])]
 	try:
 		for i in range(len(clauses)):
 			if len(clauses[i]) == 2 and x[0]==-x[1]:
+				elemCounter = removeFromCounter(clauses[i])
 				del clauses[i]
 				removed = 1
 	except:
 		return clauses, removed
 	return clauses, removed
+
 
 def removeUnitClauses(clauses, truthValues):
 	removed = 0
@@ -98,16 +110,26 @@ def removeUnitClauses(clauses, truthValues):
 						truthValues[clauses[i][0]] = 1
 					else:
 						truthValues[clauses[i][0]] = 0
+					removeFromCounter(clauses[i])
 					del clauses[i]
 					removed = 1
 	except:
 		return clauses, truthValues, removed
 	return clauses, truthValues, removed
 
-def removePurity(clauses, truthValues):
-	removed = 0
-	for i in range(len(clauses)):
-		for elem in range(len(clauses[i])):
+
+def assignPurity(clauses, truthValues):
+	for elem in elemCounter:
+		if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
+				if elem>0:
+					truthValues[elem] = 1
+				else:
+					truthValues[elem] = 0
+
+
+def simplification(clauses, truthValues):
+	for clause in clauses:
+		for elem in clause:
 			pass
 
 @timeit
@@ -128,14 +150,12 @@ def solveDp(clauses, truthValues):
 	removed = 1
 	while removed:
 		removed = 0
-		elemCounter.clear()
 		clauses, removed = removeTautology(clauses)
 		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues)
 		#If clause contains false element, remove element (since it doesn't affect the clause's value)
 		#If clause contains true element, remove clause (since it's true regardless)
 		for clause in clauses:
 			for elem in clause:
-				elemCounter[elem] += 1
 				try:
 					if truthValues.get(elem) == 1:
 						clauses.remove(clause)
@@ -145,26 +165,23 @@ def solveDp(clauses, truthValues):
 						clauses[clauses.index(clause)].remove(elem)
 				except:
 					pass
-				finally:
-					#check purity
-					if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
-						if elem>0:
-							truthValues[elem] = 1
-						else:
-							truthValues[elem] = 0
-						removed = 1
-
+		#check purity
+		assignPurity(clauses, truthValues)
 	if not clauses:
 		print('SAT')
 	return clauses, truthValues
 	#Backtrack boys
 	#TODO
 
+
 if __name__ == "__main__":
+	
 	sudokuRules = getRules()
 	games = readGames(r'test sudokus/1000 sudokus.txt')
 	game1 = sudokuRules + games[0]
-	elemCounter = Counter()
+	print(len(game1))
+	elemCounter = Counter(list(chain(*game1)))
 	newClauses, truthVals = solveDp(game1,{})
+
 	print('Length of clauses after removal:',len(newClauses))
 	print('Game length:',len(games[0]))
