@@ -7,22 +7,22 @@ from math import sqrt
 def timeit(f):
 	#decorator used to time functions
 	#works with recursive behavior
-    is_evaluating = False
-    def g(*args):
-        nonlocal is_evaluating
-        if is_evaluating:
-            return f(*args)
-        else:
-            start_time = time.process_time()
-            is_evaluating = True
-            try:
-                value = f(*args)
-            finally:
-                is_evaluating = False
-            end_time = time.process_time()
-            print(f'time taken for {f.__name__}: {end_time-start_time}')
-            return value
-    return g
+	is_evaluating = False
+	def g(*args):
+		nonlocal is_evaluating
+		if is_evaluating:
+			return f(*args)
+		else:
+			start_time = time.process_time()
+			is_evaluating = True
+			try:
+				value = f(*args)
+			finally:
+				is_evaluating = False
+			end_time = time.process_time()
+			print(f'time taken for {f.__name__}: {end_time-start_time}')
+			return value
+	return g
 
 
 def getRules():
@@ -80,6 +80,38 @@ def gameToCnf(gameString):
 			truthValues[val] = 1
 	return truthValues, gameRules
 
+def removeTautology(clauses):
+	removed = 0
+	clauses = [x for x in clauses if not(len(x)==2 and x[0]==-x[1])]
+	try:
+		for i in range(len(clauses)):
+			if len(clauses[i]) == 2 and x[0]==-x[1]:
+				del clauses[i]
+				removed = 1
+	except:
+		return clauses, removed
+	return clauses, removed
+
+def removeUnitClauses(clauses, truthValues):
+	removed = 0
+	try:
+		for i in range(len(clauses)):
+				if len(clauses[i])==1:
+					if clauses[i][0] > 0:
+						truthValues[clauses[i][0]] = 1
+					else:
+						truthValues[clauses[i][0]] = 0
+					del clauses[i]
+					removed = 1
+	except:
+		return clauses, truthValues, removed
+	return clauses, truthValues, removed
+
+def removePurity(clauses, truthValues):
+	removed = 0
+	for i in range(len(clauses)):
+		for elem in range(len(clauses[i])):
+			pass
 
 @timeit
 def solveDp(clauses, truthValues):
@@ -97,49 +129,32 @@ def solveDp(clauses, truthValues):
 
 	#Loop through elements and count them only once, then modify counter as you remove clauses
 	#Simplify clauses as much as possible
-	done = 0
-	while not done:
-		done = 1
+	removed = 1
+	while removed:
+		removed = 0
+		clauses, removed = removeTautology(clauses)
+		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues)
+		#If clause contains false element, remove element (since it doesn't affect the clause's value)
+		#If clause contains true element, remove clause (since it's true regardless)
 		for clause in clauses:
-			#check tautology
-			if len(clause)==2:
-				if clause[0] == -clause[1]:
-					done = 0
-					clauses.remove(clause)
-					# print('clause removed: ', clause)
-			#check unit clause
-			if len(clause)==1:
-				done = 0
-				if clause[0] > 0:
-					truthValues[clause[0]] = 1
-				else:
-					truthValues[clause[0]] = 0
-				clauses.remove(clause)
-				# print('clause removed: ', clause)
-			
-			#If clause contains false element, remove element (since it doesn't affect the clause's value)
-			#If clause contains true element, remove clause (since it's true regardless)
-			# for elem in clause:
-			# 	elemCounter[elem] += 1
-			# 	try:
-			# 		if truthValues.get(elem) == 1:
-			# 			clauses.remove(clause)
-			# 			# print('clause removed: ', clause)
-			# 			done = 0
-			# 		if truthValues.get(elem) == 0:
-			# 			clauses[clauses.index(clause)].remove(elem)
-			# 	except:
-			# 		print('Attempted to remove already removed clause')
-			# 	finally:
-			# 		done = 0
-
-			# #Check purity using the counter
-			for elem in elemCounter:
-				if elemCounter[elem] == 1 and elemCounter[-elem] == 0:
-					if elem>0:
-						truthValues[elem] = 1
+			for elem in clause:
+				elemCounter[elem] += 1
+				try:
+					if truthValues.get(elem) == 1:
+						clauses.remove(clause)
+						# print('clause removed: ', clause)
+						removed = 1
+					if truthValues.get(elem) == 0:
+						clauses[clauses.index(clause)].remove(elem)
+				except:
+					pass
+				finally:
+					if elemCounter[elem] == 1 and elemCounter[-elem] == 0:
+						if elem>0:
+							truthValues[elem] = 1
 					else:
-						truthValues[elem] = 0
+							truthValues[elem] = 0
+					removed = 1
 
 	if not clauses:
 		print('SAT')
@@ -154,5 +169,5 @@ if __name__ == "__main__":
 	game1 = sudokuRules + games[0]
 	elemCounter = Counter()
 	newClauses, truthVals = solveDp(game1,{})
-	print(len(newClauses))
-	print(len(games[0]))
+	print('Length of clauses after removal:',len(newClauses))
+	print('Game length:',len(games[0]))
