@@ -11,13 +11,13 @@ def timeit(f):
         if is_evaluating:
             return f(*args)
         else:
-            start_time = time.clock()
+            start_time = time.process_time()
             is_evaluating = True
             try:
                 value = f(*args)
             finally:
                 is_evaluating = False
-            end_time = time.clock()
+            end_time = time.process_time()
             print(f'time taken for {f.__name__}: {end_time-start_time}')
             return value
     return g
@@ -91,26 +91,18 @@ def solveDp(clauses, truthValues):
 	if [] in clauses:
 		return 'UNSAT'
 
-	#If clause contains false element, remove element (since it doesn't affect the clause's value)
-	#If clause contains true element, remove clause (since it's true regardless)
-	for idx1, clause in enumerate(clauses):
-		for elem in enumerate(clause):
-			if truthValues.get(elem) == 1:
-				clauses.remove(clause)
-			if truthValues.get(elem) == 0:
-				clauses[idx1].remove(elem)
-	
 	#Simplify clauses as much as possible
 	done = 0
 	while not done:
 		done = 1
+		elemCounter.clear()
 		for clause in clauses:
 			#check tautology
 			if len(clause)==2:
 				if clause[0] == -clause[1]:
 					done = 0
 					clauses.remove(clause)
-					print('clause removed: ', clause)
+					# print('clause removed: ', clause)
 			#check unit clause
 			if len(clause)==1:
 				done = 0
@@ -119,17 +111,43 @@ def solveDp(clauses, truthValues):
 				else:
 					truthValues[clause[0]] = 0
 				clauses.remove(clause)
-				print('clause removed: ', clause)
-			#check purity
-			#TODO
-			#maybe use a counter
+				# print('clause removed: ', clause)
+			
+			#If clause contains false element, remove element (since it doesn't affect the clause's value)
+			#If clause contains true element, remove clause (since it's true regardless)
+			for elem in clause:
+				elemCounter[elem] += 1
+				try:
+					if truthValues.get(elem) == 1:
+						clauses.remove(clause)
+						# print('clause removed: ', clause)
+						done = 0
+					if truthValues.get(elem) == 0:
+						clauses[clauses.index(clause)].remove(elem)
+				except:
+					print('Attempted to remove already removed clause')
+				finally:
+					done = 0
 
+			#check purity using the counter
+			for elem in elemCounter:
+				if elemCounter[elem] == 1 and elemCounter[-elem] == 0:
+					if elem>0:
+						truthValues[elem] = 1
+					else:
+						truthValues[elem] = 0
+
+	if not clauses:
+		print('SAT')
 	return clauses, truthValues
 	#Backtrack boys
 	#TODO
 
 if __name__ == "__main__":
 	sudokuRules = getRules()
-	games = readGames('test sudokus/1000 sudokus.txt')
+	games = readGames(r'test sudokus/1000 sudokus.txt')
 	game1 = sudokuRules + games[0]
-	newClauses, newTruthVals = solveDp(game1,{})
+	elemCounter = Counter()
+	newClauses, truthVals = solveDp(game1,{})
+	print(len(newClauses))
+	print(len(games[0]))
