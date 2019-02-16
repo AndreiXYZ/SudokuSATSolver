@@ -145,12 +145,12 @@ def solveDp(clauses, truthValues):
 				except:
 					pass
 				finally:
-					if elemCounter[elem] == 1 and elemCounter[-elem] == 0:
+					if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
 						if elem>0:
 							truthValues[elem] = 1
-					else:
+						else:
 							truthValues[elem] = 0
-					removed = 1
+						removed = 1
 
 	if not clauses:
 		print('SAT')
