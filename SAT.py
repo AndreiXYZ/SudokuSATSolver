@@ -128,6 +128,7 @@ def solveDp(clauses, truthValues):
 	removed = 1
 	while removed:
 		removed = 0
+		elemCounter.clear()
 		clauses, removed = removeTautology(clauses)
 		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues)
 		#If clause contains false element, remove element (since it doesn't affect the clause's value)
@@ -145,6 +146,7 @@ def solveDp(clauses, truthValues):
 				except:
 					pass
 				finally:
+					#check purity
 					if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
 						if elem>0:
 							truthValues[elem] = 1
