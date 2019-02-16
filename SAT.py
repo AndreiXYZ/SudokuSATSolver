@@ -1,5 +1,6 @@
 import copy
 from collections import Counter
+from itertools import chain
 import time
 
 def timeit(f):
@@ -77,6 +78,7 @@ def gameToCnf(gameString):
 			truthValues[val] = 1
 	return truthValues, gameRules
 
+
 @timeit
 def solveDp(clauses, truthValues):
 	'''
@@ -91,6 +93,7 @@ def solveDp(clauses, truthValues):
 	if [] in clauses:
 		return 'UNSAT'
 
+	#Loop through elements and count them only once, then modify counter as you remove clauses
 	#Simplify clauses as much as possible
 	done = 0
 	while not done:
@@ -129,7 +132,7 @@ def solveDp(clauses, truthValues):
 				finally:
 					done = 0
 
-			#check purity using the counter
+			#Check purity using the counter
 			for elem in elemCounter:
 				if elemCounter[elem] == 1 and elemCounter[-elem] == 0:
 					if elem>0:
@@ -140,7 +143,8 @@ def solveDp(clauses, truthValues):
 	if not clauses:
 		print('SAT')
 	return clauses, truthValues
-	#Backtrack boys
+
+	#Now backtrack: pick a literal and assign a truth value to it
 	#TODO
 
 if __name__ == "__main__":
