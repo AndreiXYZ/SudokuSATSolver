@@ -1,7 +1,8 @@
 import copy
+import time
 from collections import Counter
 from itertools import chain
-import time
+from math import sqrt
 
 def timeit(f):
 	#decorator used to time functions
@@ -69,10 +70,11 @@ def gameToCnf(gameString):
 	#Squares that are filled in are an extra constraint
 	gameRules = []
 	truthValues = dict()
+	sudokuSize = sqrt(len(gameString)-1)
 	for idx, elem in enumerate(gameString):
 		if elem not in ['.', '\n']:
-			row = idx//9+1
-			col = idx%9+1
+			row = idx//sudokuSize+1
+			col = idx%sudokuSize+1
 			val = row*100+col*10+int(elem)
 			gameRules.append([val])
 			truthValues[val] = 1
@@ -98,7 +100,6 @@ def solveDp(clauses, truthValues):
 	done = 0
 	while not done:
 		done = 1
-		elemCounter.clear()
 		for clause in clauses:
 			#check tautology
 			if len(clause)==2:
@@ -118,21 +119,21 @@ def solveDp(clauses, truthValues):
 			
 			#If clause contains false element, remove element (since it doesn't affect the clause's value)
 			#If clause contains true element, remove clause (since it's true regardless)
-			for elem in clause:
-				elemCounter[elem] += 1
-				try:
-					if truthValues.get(elem) == 1:
-						clauses.remove(clause)
-						# print('clause removed: ', clause)
-						done = 0
-					if truthValues.get(elem) == 0:
-						clauses[clauses.index(clause)].remove(elem)
-				except:
-					print('Attempted to remove already removed clause')
-				finally:
-					done = 0
+			# for elem in clause:
+			# 	elemCounter[elem] += 1
+			# 	try:
+			# 		if truthValues.get(elem) == 1:
+			# 			clauses.remove(clause)
+			# 			# print('clause removed: ', clause)
+			# 			done = 0
+			# 		if truthValues.get(elem) == 0:
+			# 			clauses[clauses.index(clause)].remove(elem)
+			# 	except:
+			# 		print('Attempted to remove already removed clause')
+			# 	finally:
+			# 		done = 0
 
-			#Check purity using the counter
+			# #Check purity using the counter
 			for elem in elemCounter:
 				if elemCounter[elem] == 1 and elemCounter[-elem] == 0:
 					if elem>0:
