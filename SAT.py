@@ -1,8 +1,6 @@
 import copy
-import time
 from collections import Counter
-from itertools import chain
-from math import sqrt
+import time
 
 def timeit(f):
 	#decorator used to time functions
@@ -70,11 +68,10 @@ def gameToCnf(gameString):
 	#Squares that are filled in are an extra constraint
 	gameRules = []
 	truthValues = dict()
-	sudokuSize = sqrt(len(gameString)-1)
 	for idx, elem in enumerate(gameString):
 		if elem not in ['.', '\n']:
-			row = idx//sudokuSize+1
-			col = idx%sudokuSize+1
+			row = idx//9+1
+			col = idx%9+1
 			val = row*100+col*10+int(elem)
 			gameRules.append([val])
 			truthValues[val] = 1
@@ -127,7 +124,6 @@ def solveDp(clauses, truthValues):
 	if [] in clauses:
 		return 'UNSAT'
 
-	#Loop through elements and count them only once, then modify counter as you remove clauses
 	#Simplify clauses as much as possible
 	removed = 1
 	while removed:
@@ -159,8 +155,7 @@ def solveDp(clauses, truthValues):
 	if not clauses:
 		print('SAT')
 	return clauses, truthValues
-
-	#Now backtrack: pick a literal and assign a truth value to it
+	#Backtrack boys
 	#TODO
 
 if __name__ == "__main__":
