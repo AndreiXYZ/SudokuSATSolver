@@ -2,7 +2,8 @@ import copy
 from collections import Counter
 from itertools import chain
 import time
-
+import random
+import copy
 
 def timeit(f):
 	#decorator used to time functions
@@ -56,12 +57,10 @@ def readGames(file):
 	rules (see above).
 	'''
 	games = []
-	truthValuesAll = []
 	with open(file, 'r') as f:
 		for game in f:
-			truthValues, gameRules = gameToCnf(game)
+			gameRules = gameToCnf(game)
 			games.append(gameRules)
-			truthValuesAll.append(truthValues)
 	return games
 
 
@@ -69,15 +68,13 @@ def gameToCnf(gameString):
 	#Converts game string to CNF rules.
 	#Squares that are filled in are an extra constraint
 	gameRules = []
-	truthValues = dict()
 	for idx, elem in enumerate(gameString):
 		if elem not in ['.', '\n']:
 			row = idx//9+1
 			col = idx%9+1
 			val = row*100+col*10+int(elem)
 			gameRules.append([val])
-			truthValues[val] = 1
-	return truthValues, gameRules
+	return gameRules
 
 def removeFromCounter(args):
 	if type(args) == list:
@@ -132,7 +129,7 @@ def simplification(clauses, truthValues):
 		for elem in clause:
 			pass
 
-@timeit
+#@timeit
 def solveDp(clauses, truthValues):
 	'''
 	Given a set of rules, (sudoku rules + puzzle)
@@ -142,9 +139,8 @@ def solveDp(clauses, truthValues):
 
 	#Check termination conditions
 	if not clauses:
-		return 'SAT'
-	if [] in clauses:
-		return 'UNSAT'
+		return clauses,truthValues,'SAT'
+
 
 	#Simplify clauses as much as possible
 	removed = 1
@@ -158,18 +154,23 @@ def solveDp(clauses, truthValues):
 			for elem in clause:
 				try:
 					if truthValues.get(elem) == 1:
+						#removeFromCounter(clause)
 						clauses.remove(clause)
 						# print('clause removed: ', clause)
 						removed = 1
+						break
 					if truthValues.get(elem) == 0:
 						clauses[clauses.index(clause)].remove(elem)
+						#removeFromCounter(elem)
 				except:
 					pass
 		#check purity
 		assignPurity(clauses, truthValues)
+	if [] in clauses:
+		return clauses,truthValues,'UNSAT'
 	if not clauses:
-		print('SAT')
-	return clauses, truthValues
+		return clauses,truthValues,"SAT"
+	return clauses, truthValues, 0
 	#Backtrack boys
 	#TODO
 
@@ -181,7 +182,38 @@ if __name__ == "__main__":
 	game1 = sudokuRules + games[0]
 	print(len(game1))
 	elemCounter = Counter(list(chain(*game1)))
-	newClauses, truthVals = solveDp(game1,{})
-
+	newClauses, truthVals, sat = solveDp(game1,{})
 	print('Length of clauses after removal:',len(newClauses))
-	print('Game length:',len(games[0]))
+	#split + backtrack
+	split=0
+	presplitClauses=copy.deepcopy(newClauses)
+	presplitTruthVals=truthVals.copy()
+	presplitCounter=copy.deepcopy(elemCounter)
+	while True:
+		print(sat)
+		if sat=="UNSAT":
+			newClauses=copy.deepcopy(presplitClauses)
+			truthVals=presplitTruthVals.copy()
+			truthVals[split]=0
+			elemCounter=copy.deepcopy(presplitCounter)
+		elif sat==0:
+			presplitClauses=copy.deepcopy(newClauses)
+			presplitTruthVals=truthVals.copy()
+			presplitCounter=copy.deepcopy(elemCounter)
+		elif sat=="SAT":
+			answer=[k for k,v in truthVals.items() if v == 1 and k>0]
+			print(answer)
+			print(len(answer))
+			break
+		while True:
+			clause=newClauses[random.randint(0,len(newClauses)-1)]
+			split=clause[random.randint(0,len(clause)-1)]
+			splitCell=split//10
+			truthCells=[k//10 for k,v in truthVals.items() if v==1 and k>0]
+			#print('Filled Squares:',sorted([k for k,v in truthVals.items() if v==1 and k>0]))
+			if splitCell not in truthCells:
+				break
+		truthVals[split]=1
+		newClauses, truthVals,sat = solveDp(newClauses,truthVals)
+		print('Length of clauses after removal:',len(newClauses))
+		#print(truthVals)
