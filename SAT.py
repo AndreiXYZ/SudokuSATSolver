@@ -147,10 +147,12 @@ def removeUnitClauses(clauses, truthValues):
 
 
 def removePurity(clauses, truthValues):
+	removed = 0
 	for idx,clause in enumerate(clauses):
 		for elem in clause:
 			#check if elem is pure
 			if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
+				removed = 1
 				#assign its truth value
 				if elem>0:
 					truthValues[abs(elem)] = 1
@@ -159,7 +161,7 @@ def removePurity(clauses, truthValues):
 				#remove clause
 				del clauses[idx]
 				break
-
+	return clauses, truthValues, removed
 
 
 #@timeit
@@ -179,13 +181,9 @@ def solveDp(clauses, truthValues):
 	while removed:
 		removed = 0
 		clauses, removed = removeTautology(clauses)
-		removePurity(clauses, truthValues)
+		clauses, truthValues, removed = removePurity(clauses, truthValues)
 		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues)
-		#If clause contains false element, remove element (since it doesn't affect the clause's value)
-		#If clause contains true element, remove clause (since it's true regardless)
-		#check purity
 
-		break
 	if [] in clauses:
 		return clauses,truthValues,'UNSAT'
 	if not clauses:
@@ -206,37 +204,37 @@ if __name__ == "__main__":
 	#print(newClauses)
 	print('Length of clauses after removal:',len(newClauses))
 	#split + backtrack
-	# split=0
-	# presplitClauses=copy.deepcopy(newClauses)
-	# presplitTruthVals=truthVals.copy()
-	# presplitCounter=copy.deepcopy(elemCounter)
-	# while True:
-	# 	print(sat)
-	# 	if sat=="UNSAT":
-	# 		newClauses=copy.deepcopy(presplitClauses)
-	# 		truthVals=presplitTruthVals.copy()
-	# 		truthVals[split]=0
-	# 		elemCounter=copy.deepcopy(presplitCounter)
-	# 	elif sat==0:
-	# 		presplitClauses=copy.deepcopy(newClauses)
-	# 		presplitTruthVals=truthVals.copy()
-	# 		presplitCounter=copy.deepcopy(elemCounter)
-	# 	elif sat=="SAT":
-	# 		answer=[k for k,v in truthVals.items() if v == 1 and k>0]
-	# 		print(answer)
-	# 		print(len(answer))
-	# 		break
-	# 	while True:
-	# 		clause=newClauses[random.randint(0,len(newClauses)-1)]
-	# 		#print(newClauses)
-	# 		split=clause[random.randint(0,len(clause)-1)]
-	# 		splitCell=split//10
-	# 		truthCells=[k//10 for k,v in truthVals.items() if v==1 and k>0]
-	# 		#print('Filled Squares:',sorted([k for k,v in truthVals.items() if v==1 and k>0]))
-	# 		if splitCell not in truthCells:
-	# 			break
-	# 	truthVals[split]=1
-	# 	truthVals[split]=0
-	# 	newClauses, truthVals,sat = solveDp(newClauses,truthVals)
-	# 	print('Length of clauses after removal:',len(newClauses))
-	# 	print(len(truthVals))
+	split=0
+	presplitClauses=copy.deepcopy(newClauses)
+	presplitTruthVals=truthVals.copy()
+	presplitCounter=copy.deepcopy(elemCounter)
+	while True:
+		print(sat)
+		if sat=="UNSAT":
+			newClauses=copy.deepcopy(presplitClauses)
+			truthVals=presplitTruthVals.copy()
+			truthVals[split]=0
+			elemCounter=copy.deepcopy(presplitCounter)
+		elif sat==0:
+			presplitClauses=copy.deepcopy(newClauses)
+			presplitTruthVals=truthVals.copy()
+			presplitCounter=copy.deepcopy(elemCounter)
+		elif sat=="SAT":
+			answer=[k for k,v in truthVals.items() if v == 1 and k>0]
+			print(answer)
+			print(len(answer))
+			break
+		while True:
+			clause=newClauses[random.randint(0,len(newClauses)-1)]
+			#print(newClauses)
+			split=clause[random.randint(0,len(clause)-1)]
+			splitCell=split//10
+			truthCells=[k//10 for k,v in truthVals.items() if v==1 and k>0]
+			#print('Filled Squares:',sorted([k for k,v in truthVals.items() if v==1 and k>0]))
+			if splitCell not in truthCells:
+				break
+		truthVals[split]=1
+		truthVals[split]=0
+		newClauses, truthVals,sat = solveDp(newClauses,truthVals)
+		print('Length of clauses after removal:',len(newClauses))
+		print(len(truthVals))
