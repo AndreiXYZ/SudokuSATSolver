@@ -83,8 +83,8 @@ def removeFromCounter(args):
 			if elemCounter[elem] > 0:
 				elemCounter[elem] -= 1
 	elif type(args) == int:
-		if elemCounter[elem] > 0:
-			elemCounter[elem] -= 1
+		if elemCounter[args] > 0:
+			elemCounter[args] -= 1
 
 
 def removeTautology(clauses):
@@ -103,13 +103,12 @@ def removeTautology(clauses):
 def removeUnitClauses(clauses, truthValues):
 	removed = 0
 	unitClauses = []
+	#build unit clause list and remove units
 	try:
-		#build unit clause list 
 		for i in range(len(clauses)):
 			if len(clauses[i])==1:
 				#check for L and not L being both unit cases
 				#TODO
-
 				unitClauses.append(clauses[i][0])
 
 				if clauses[i][0] > 0:
@@ -119,41 +118,49 @@ def removeUnitClauses(clauses, truthValues):
 				removeFromCounter(clauses[i])
 				del clauses[i]
 				removed = 1
-
-		#check if impossible
-		for unitClause1 in unitClauses:
-			for unitClause2 in unitClause:
-				if unitClause1 == -unitClause2:
-					return 'UNSAT'
-
-
-		for unitClause in unitClauses:
-			for idx1, clause in enumerate(clauses):
-				for idx2, elem in enumerate(clause):
-					#if an element of clause is known to be false, remove it
-					if elem == -unitClause:
-						removeFromCounter(elem)
-						del clauses[idx1][idx2]
-						removed = 1
-					#if an element of clause is known to be true, remove clause
-					if elem == unitClause:
-						removeFromCounter(clause)
-						del clauses[idx1]
-						removed = 1
-						break
 	except Exception as e:
 		print(e)
-		return clauses, truthValues, removed
+
+	#check if impossible
+	for unitClause1 in unitClauses:
+		for unitClause2 in unitClauses:
+			if unitClause1 == -unitClause2:
+				return 'UNSAT'
+
+
+	for unitClause in unitClauses:
+		for idx1, clause in enumerate(clauses):
+			for idx2, elem in enumerate(clause):
+				#if an element of clause is known to be false, remove it
+				if elem == -unitClause:
+					removeFromCounter(elem)
+					del clauses[idx1][idx2]
+					removed = 1
+				#if an element of clause is known to be true, remove clause
+				if elem == unitClause:
+					removeFromCounter(clause)
+					del clauses[idx1]
+					removed = 1
+					break
+
 	return clauses, truthValues, removed
 
 
-def checkPurity(clauses, truthValues):
-	for elem in elemCounter:
-		if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
-			if elem>0:
-				truthValues[abs(elem)] = 1
-			else:
-				truthValues[abs(elem)] = 0
+def removePurity(clauses, truthValues):
+	for idx,clause in enumerate(clauses):
+		for elem in clause:
+			#check if elem is pure
+			if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
+				#assign its truth value
+				if elem>0:
+					truthValues[abs(elem)] = 1
+				else:
+					truthValues[abs(elem)] = 0
+				#remove clause
+				del clauses[idx]
+				break
+
+
 
 #@timeit
 def solveDp(clauses, truthValues):
@@ -172,7 +179,7 @@ def solveDp(clauses, truthValues):
 	while removed:
 		removed = 0
 		clauses, removed = removeTautology(clauses)
-		checkPurity(clauses, truthValues)
+		removePurity(clauses, truthValues)
 		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues)
 		#If clause contains false element, remove element (since it doesn't affect the clause's value)
 		#If clause contains true element, remove clause (since it's true regardless)
@@ -194,7 +201,7 @@ if __name__ == "__main__":
 	games = readGames(r'test sudokus/1000 sudokus.txt')
 	game1 = sudokuRules + games[0]
 	print(len(game1))
-	elemCounter = Counter(list(chain(*game1)))
+	elemCounter = Counter(list(map(lambda x: abs(x), chain(*game1))))
 	newClauses, truthVals, sat = solveDp(game1,{})
 	#print(newClauses)
 	print('Length of clauses after removal:',len(newClauses))
@@ -231,5 +238,5 @@ if __name__ == "__main__":
 	# 	truthVals[split]=1
 	# 	truthVals[split]=0
 	# 	newClauses, truthVals,sat = solveDp(newClauses,truthVals)
-		# print('Length of clauses after removal:',len(newClauses))
-		#print(truthVals)
+	# 	print('Length of clauses after removal:',len(newClauses))
+	# 	print(len(truthVals))
