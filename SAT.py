@@ -1,4 +1,3 @@
-import copy
 from collections import Counter
 from itertools import chain
 import time
@@ -172,10 +171,6 @@ def solveDp(clauses, truthValues):
 	Uses DP algorithm
 	'''
 
-	#Check termination conditions
-	if not clauses:
-		return clauses,truthValues,'SAT'
-
 	#Simplify clauses as much as possible
 	removed = 1
 	while removed:
@@ -184,13 +179,32 @@ def solveDp(clauses, truthValues):
 		clauses, truthValues, removed = removePurity(clauses, truthValues)
 		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues)
 
+	#Check termination conditions
 	if [] in clauses:
+		print('UNSAT')
 		return clauses,truthValues,'UNSAT'
 	if not clauses:
+		print('SAT')
+		print(truthValues)
 		return clauses,truthValues,"SAT"
-	return clauses, truthValues, 0
+
+
 	#Backtrack boys
-	#TODO
+	for literal in randomOrder:
+		#if literal already has truth assigned, skip it
+		if truthValues.get(literal) is not None:
+			continue
+		for val in [1,0]:
+			tempTruthVals = truthValues.copy()
+			tempClauses = copy.deepcopy(clauses)
+			tempCounter = copy.deepcopy(elemCounter)
+			
+			tempTruthVals[literal] = val
+			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals)
+			if sat=='SAT':
+				return
+
+
 
 
 if __name__ == "__main__":
@@ -200,41 +214,45 @@ if __name__ == "__main__":
 	game1 = sudokuRules + games[0]
 	print(len(game1))
 	elemCounter = Counter(list(map(lambda x: abs(x), chain(*game1))))
+	randomOrder = list(elemCounter.keys())
+	random.shuffle(randomOrder)
+	print(randomOrder)
 	newClauses, truthVals, sat = solveDp(game1,{})
-	#print(newClauses)
-	print('Length of clauses after removal:',len(newClauses))
-	#split + backtrack
-	split=0
-	presplitClauses=copy.deepcopy(newClauses)
-	presplitTruthVals=truthVals.copy()
-	presplitCounter=copy.deepcopy(elemCounter)
-	while True:
-		print(sat)
-		if sat=="UNSAT":
-			newClauses=copy.deepcopy(presplitClauses)
-			truthVals=presplitTruthVals.copy()
-			truthVals[split]=0
-			elemCounter=copy.deepcopy(presplitCounter)
-		elif sat==0:
-			presplitClauses=copy.deepcopy(newClauses)
-			presplitTruthVals=truthVals.copy()
-			presplitCounter=copy.deepcopy(elemCounter)
-		elif sat=="SAT":
-			answer=[k for k,v in truthVals.items() if v == 1 and k>0]
-			print(answer)
-			print(len(answer))
-			break
-		while True:
-			clause=newClauses[random.randint(0,len(newClauses)-1)]
-			#print(newClauses)
-			split=clause[random.randint(0,len(clause)-1)]
-			splitCell=split//10
-			truthCells=[k//10 for k,v in truthVals.items() if v==1 and k>0]
-			#print('Filled Squares:',sorted([k for k,v in truthVals.items() if v==1 and k>0]))
-			if splitCell not in truthCells:
-				break
-		truthVals[split]=1
-		truthVals[split]=0
-		newClauses, truthVals,sat = solveDp(newClauses,truthVals)
-		print('Length of clauses after removal:',len(newClauses))
-		print(len(truthVals))
+	print(sat)
+	# #print(newClauses)
+	# print('Length of clauses after removal:',len(newClauses))
+	# #split + backtrack
+	# split=0
+	# presplitClauses=copy.deepcopy(newClauses)
+	# presplitTruthVals=truthVals.copy()
+	# presplitCounter=copy.deepcopy(elemCounter)
+	# while True:
+	# 	print(sat)
+	# 	if sat=="UNSAT":
+	# 		newClauses=copy.deepcopy(presplitClauses)
+	# 		truthVals=presplitTruthVals.copy()
+	# 		truthVals[split]=0
+	# 		elemCounter=copy.deepcopy(presplitCounter)
+	# 	elif sat==0:
+	# 		presplitClauses=copy.deepcopy(newClauses)
+	# 		presplitTruthVals=truthVals.copy()
+	# 		presplitCounter=copy.deepcopy(elemCounter)
+	# 	elif sat=="SAT":
+	# 		answer=[k for k,v in truthVals.items() if v == 1 and k>0]
+	# 		print(answer)
+	# 		print(len(answer))
+	# 		break
+	# 	while True:
+	# 		clause=newClauses[random.randint(0,len(newClauses)-1)]
+	# 		#print(newClauses)
+	# 		split=clause[random.randint(0,len(clause)-1)]
+	# 		splitCell=split//10
+	# 		truthCells=[k//10 for k,v in truthVals.items() if v==1 and k>0]
+	# 		#print('Filled Squares:',sorted([k for k,v in truthVals.items() if v==1 and k>0]))
+	# 		if splitCell not in truthCells:
+	# 			break
+	# 	truthVals[split]=1
+	# 	truthVals[split]=0
+	# 	newClauses, truthVals,sat = solveDp(newClauses,truthVals)
+	# 	print('Length of clauses after removal:',len(newClauses))
+	# 	print(len(truthVals))
