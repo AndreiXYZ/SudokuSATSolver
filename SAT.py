@@ -76,7 +76,7 @@ def gameToCnf(gameString):
 			gameRules.append([val])
 	return gameRules
 
-def removeFromCounter(args):
+def removeFromCounter(args,elemCounter):
 	if type(args) == list:
 		for elem in args:
 			if elemCounter[elem] > 0:
@@ -86,12 +86,12 @@ def removeFromCounter(args):
 			elemCounter[args] -= 1
 
 
-def removeTautology(clauses):
+def removeTautology(clauses,counter):
 	removed = 0
 	try:
 		for i in range(len(clauses)):
-			if len(clauses[i]) == 2 and clauses[i][0]==-clauses[i][1]:
-				elemCounter = removeFromCounter(clauses[i])
+			if (len(clauses[i]) == 2) and (clauses[i][0]==-clauses[i][1]):
+				removeFromCounter(clauses[i],counter)
 				del clauses[i]
 				removed = 1
 	except:
@@ -99,7 +99,7 @@ def removeTautology(clauses):
 	return clauses, removed
 
 
-def removeUnitClauses(clauses, truthValues):
+def removeUnitClauses(clauses, truthValues,counter):
 	removed = 0
 	unitClauses = []
 	#build unit clause list and remove units
@@ -114,7 +114,7 @@ def removeUnitClauses(clauses, truthValues):
 					truthValues[abs(clauses[i][0])] = 1
 				else:
 					truthValues[abs(clauses[i][0])] = 0
-				removeFromCounter(clauses[i])
+				removeFromCounter(clauses[i],counter)
 				del clauses[i]
 				removed = 1
 	except Exception as e:
@@ -132,12 +132,12 @@ def removeUnitClauses(clauses, truthValues):
 			for idx2, elem in enumerate(clause):
 				#if an element of clause is known to be false, remove it
 				if elem == -unitClause:
-					removeFromCounter(elem)
+					removeFromCounter(elem,counter)
 					del clauses[idx1][idx2]
 					removed = 1
 				#if an element of clause is known to be true, remove clause
 				if elem == unitClause:
-					removeFromCounter(clause)
+					removeFromCounter(clause,counter)
 					del clauses[idx1]
 					removed = 1
 					break
@@ -145,12 +145,13 @@ def removeUnitClauses(clauses, truthValues):
 	return clauses, truthValues, removed
 
 
-def removePurity(clauses, truthValues):
+def removePurity(clauses, truthValues,elemCounter):
 	removed = 0
 	for idx,clause in enumerate(clauses):
 		for elem in clause:
 			#check if elem is pure
 			if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
+				#print(clause)
 				removed = 1
 				#assign its truth value
 				if elem>0:
@@ -164,7 +165,7 @@ def removePurity(clauses, truthValues):
 
 
 #@timeit
-def solveDp(clauses, truthValues):
+def solveDp(clauses, truthValues,elemCounter):
 	'''
 	Given a set of rules, (sudoku rules + puzzle)
 	find a solution and return it. 
@@ -175,9 +176,12 @@ def solveDp(clauses, truthValues):
 	removed = 1
 	while removed:
 		removed = 0
-		clauses, removed = removeTautology(clauses)
-		clauses, truthValues, removed = removePurity(clauses, truthValues)
-		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues)
+		print('Original clauses with size >2: ',len([x for x in clauses if len(x)>2]))
+		clauses, removed = removeTautology(clauses,elemCounter)
+		print('After tautology clauses with size >2: ',len([x for x in clauses if len(x)>2]))
+		clauses, truthValues, removed = removePurity(clauses, truthValues,elemCounter)
+		print('After purity clauses with size >2: ',len([x for x in clauses if len(x)>2]))
+		clauses, truthValues, removed = removeUnitClauses(clauses, truthValues,elemCounter)
 
 	#Check termination conditions
 	if [] in clauses:
@@ -188,21 +192,31 @@ def solveDp(clauses, truthValues):
 		print(truthValues)
 		return clauses,truthValues,"SAT"
 
-
+	print(len(clauses))
+	if len(truthValues)==729:
+		print(truthValues)
+		print(games[0])
 	#Backtrack boys
 	for literal in randomOrder:
 		#if literal already has truth assigned, skip it
 		if truthValues.get(literal) is not None:
 			continue
 		for val in [1,0]:
-			tempTruthVals = truthValues.copy()
+			tempTruthVals = copy.deepcopy(truthValues)
 			tempClauses = copy.deepcopy(clauses)
 			tempCounter = copy.deepcopy(elemCounter)
 			
 			tempTruthVals[literal] = val
-			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals)
+			# if val==1:
+				# tempClauses.append([literal,0])
+				# tempCounter[literal]=tempCounter[literal]+1
+			# else:
+				# tempClauses.append([-literal,0])
+				# tempCounter[-literal]=tempCounter[-literal]+1
+			#print(val,literal)
+			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter)
 			if sat=='SAT':
-				return
+				return 0,0,'SAT'
 
 
 
@@ -213,46 +227,9 @@ if __name__ == "__main__":
 	games = readGames(r'test sudokus/1000 sudokus.txt')
 	game1 = sudokuRules + games[0]
 	print(len(game1))
-	elemCounter = Counter(list(map(lambda x: abs(x), chain(*game1))))
-	randomOrder = list(elemCounter.keys())
+	c = Counter(list(chain(*game1)))
+	randomOrder = [k for k in c.keys() if k>0]
 	random.shuffle(randomOrder)
 	print(randomOrder)
-	newClauses, truthVals, sat = solveDp(game1,{})
+	newClauses, truthVals, sat = solveDp(game1,{},c)
 	print(sat)
-	# #print(newClauses)
-	# print('Length of clauses after removal:',len(newClauses))
-	# #split + backtrack
-	# split=0
-	# presplitClauses=copy.deepcopy(newClauses)
-	# presplitTruthVals=truthVals.copy()
-	# presplitCounter=copy.deepcopy(elemCounter)
-	# while True:
-	# 	print(sat)
-	# 	if sat=="UNSAT":
-	# 		newClauses=copy.deepcopy(presplitClauses)
-	# 		truthVals=presplitTruthVals.copy()
-	# 		truthVals[split]=0
-	# 		elemCounter=copy.deepcopy(presplitCounter)
-	# 	elif sat==0:
-	# 		presplitClauses=copy.deepcopy(newClauses)
-	# 		presplitTruthVals=truthVals.copy()
-	# 		presplitCounter=copy.deepcopy(elemCounter)
-	# 	elif sat=="SAT":
-	# 		answer=[k for k,v in truthVals.items() if v == 1 and k>0]
-	# 		print(answer)
-	# 		print(len(answer))
-	# 		break
-	# 	while True:
-	# 		clause=newClauses[random.randint(0,len(newClauses)-1)]
-	# 		#print(newClauses)
-	# 		split=clause[random.randint(0,len(clause)-1)]
-	# 		splitCell=split//10
-	# 		truthCells=[k//10 for k,v in truthVals.items() if v==1 and k>0]
-	# 		#print('Filled Squares:',sorted([k for k,v in truthVals.items() if v==1 and k>0]))
-	# 		if splitCell not in truthCells:
-	# 			break
-	# 	truthVals[split]=1
-	# 	truthVals[split]=0
-	# 	newClauses, truthVals,sat = solveDp(newClauses,truthVals)
-	# 	print('Length of clauses after removal:',len(newClauses))
-	# 	print(len(truthVals))
