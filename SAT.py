@@ -106,7 +106,9 @@ def removeUnitClauses(clauses, truthValues,counter,unitClauses):
 		for i in range(len(clauses)):
 			if len(clauses[i])==1:
 				unitClauses.append(clauses[i][0])
-
+				if -clauses[i][0] in unitClauses:
+					#print('UNSAT')
+					return 0,0,0,'UNSAT'
 				if clauses[i][0] > 0:
 					truthValues[abs(clauses[i][0])] = 1
 				else:
@@ -115,30 +117,25 @@ def removeUnitClauses(clauses, truthValues,counter,unitClauses):
 				del clauses[i]
 				removed = 1
 	except Exception as e:
-		print(e)
-
-	#check if impossible
-	for unitClause1 in unitClauses:
-		for unitClause2 in unitClauses:
-			if unitClause1 == -unitClause2:
-				print('UNSAT')
-				return 0,0,0,'UNSAT'
+		pass
+		#print(e)
 
 
-	for unitClause in unitClauses:
-		for idx1, clause in enumerate(clauses):
-			for idx2, elem in enumerate(clause):
-				#if an element of clause is known to be false, remove it
-				if elem == -unitClause:# or (elem in truthValues and truthValues[elem]==0):
-					removeFromCounter(elem,counter)
-					del clauses[idx1][idx2]
-					removed = 1
-				#if an element of clause is known to be true, remove clause
-				if elem == unitClause:# or (elem in truthValues and truthValues[elem]==1):
-					removeFromCounter(clause,counter)
-					del clauses[idx1]
-					removed = 1
-					break
+
+
+	for idx1, clause in enumerate(clauses):
+		for idx2, elem in enumerate(clause):
+			#if an element of clause is known to be false, remove it
+			if -elem in  unitClauses:# or (elem in truthValues and truthValues[elem]==0):
+				removeFromCounter(elem,counter)
+				del clauses[idx1][idx2]
+				removed = 1
+			#if an element of clause is known to be true, remove clause
+			if elem in unitClauses:# or (elem in truthValues and truthValues[elem]==1):
+				removeFromCounter(clause,counter)
+				del clauses[idx1]
+				removed = 1
+				break
 
 	return clauses, truthValues, removed, unitClauses
 
@@ -156,8 +153,6 @@ def removePurity(clauses, truthValues,elemCounter):
 					truthValues[abs(elem)] = 1
 				else:
 					truthValues[abs(elem)] = 0
-					if elem==129:
-						print("hi")
 				#remove clause
 				del clauses[idx]
 				break
@@ -234,7 +229,7 @@ def check_sudoku(true_vars):
                         correct = False
                         print("Repeated value in cell:", (top_left_x, top_left_y))
     return correct
-#@timeit
+@timeit
 def solveDp(clauses, truthValues,elemCounter, unitClauses):
 	'''
 	Given a set of rules, (sudoku rules + puzzle)
@@ -256,20 +251,19 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses):
 			return 0,0,"UNSAT"
 	#Check termination conditions
 	if [] in clauses:
-		print('UNSAT []')
+		#print('UNSAT []')
 		return clauses,truthValues,'UNSAT'
 	if not clauses:
-		print('SAT')
+		#print('SAT')
 		answer=sorted([k for k,v in truthValues.items() if v==1])
-		print('ans=',answer)
-		print(games[0])
-		print(len(answer))
-		print_sudoku(answer)
-		check_sudoku(answer)
+		#print('ans=',answer)
+		#print(games[0])
+		#print(len(answer))
+		#print_sudoku(answer)
+		print(check_sudoku(answer))
 		return clauses,truthValues,"SAT"
 
-	print(len(clauses))
-	#Backtrack boys
+	#print(len(clauses))
 	for literal in randomOrder:
 		#if literal already has truth assigned, skip it
 		if truthValues.get(literal) is not None:
@@ -284,12 +278,12 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses):
 				tempClauses.append([literal])
 				tempCounter[literal]=tempCounter[literal]+1
 				tempUnitClauses.append(literal)
-				print('literal picked: ',literal)
+				#print('literal picked: ',literal)
 			else:
 				tempClauses.append([-literal])
 				tempCounter[-literal]=tempCounter[-literal]+1
 				tempUnitClauses.append(-literal)
-				print('literal picked: ',-literal)
+				#print('literal picked: ',-literal)
 			#print(val,literal)
 			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter,tempUnitClauses)
 			if sat=='SAT':
@@ -302,11 +296,12 @@ if __name__ == "__main__":
 	
 	sudokuRules = getRules()
 	games = readGames(r'test sudokus/1000 sudokus.txt')
-	game1 = sudokuRules + games[0]
-	print(len(game1))
-	c = Counter(list(chain(*game1)))
-	randomOrder = [k for k in c.keys() if k>0]
-	random.shuffle(randomOrder)
-	print(randomOrder)
-	newClauses, truthVals, sat = solveDp(game1,{},c,[])
-	print(sat)
+	for i in range(0,2):
+		game1 = sudokuRules + games[i]
+		#print(len(game1))
+		c = Counter(list(chain(*game1)))
+		randomOrder = [k for k in c.keys() if k>0]
+		random.shuffle(randomOrder)
+		#print(randomOrder)
+		solveDp(game1,{},c,[])
+		#print(sat)
