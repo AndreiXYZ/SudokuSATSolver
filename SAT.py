@@ -265,8 +265,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses):
 		return clauses,truthValues,"SAT"
 
 	#print(len(clauses))
-	print(len(truthValues))
-	random.shuffle(randomOrder)
+	#print(len(truthValues))
 	for literal in randomOrder:
 		#if literal already has truth assigned, skip it
 		if truthValues.get(literal) is not None:
@@ -291,8 +290,8 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses):
 			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter,tempUnitClauses)
 			if sat=='SAT':
 				return 0,0,'SAT'
-			else:
-				return tempClauses,tempTruthVals,sat
+			elif sat=="UNSAT" and val==0:
+				return tempClauses,tempTruthVals,"UNSAT"
 
 
 
@@ -309,4 +308,5 @@ if __name__ == "__main__":
 		random.shuffle(randomOrder)
 		#print(randomOrder)
 		solveDp(game1,{},c,[])
+		print('i: ',i)
 		#print(sat)
