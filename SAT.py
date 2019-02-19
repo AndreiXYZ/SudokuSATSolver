@@ -286,7 +286,6 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	#print(len(clauses))
 	#print(len(truthValues))
 
-
 	if heuristic is not None:
 		order, valsList = heuristic(elemCounter)
 	else:
@@ -324,7 +323,6 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 				return 0,0,'SAT'
 			elif sat=="UNSAT" and val==0:
 				return tempClauses,tempTruthVals,"UNSAT"
-
 
 
 if __name__ == "__main__":
