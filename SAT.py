@@ -208,51 +208,12 @@ def solveDp(clauses, truthValues):
 
 
 if __name__ == "__main__":
-	
 	sudokuRules = getRules()
 	games = readGames(r'test sudokus/1000 sudokus.txt')
 	game1 = sudokuRules + games[0]
 	print(len(game1))
-	elemCounter = Counter(list(map(lambda x: abs(x), chain(*game1))))
-	randomOrder = list(elemCounter.keys())
+	elemCounter = Counter(list(chain(*game1)))
+	randomOrder = list(map(lambda x: abs(x), elemCounter.keys()))
 	random.shuffle(randomOrder)
 	print(randomOrder)
 	newClauses, truthVals, sat = solveDp(game1,{})
-	print(sat)
-	# #print(newClauses)
-	# print('Length of clauses after removal:',len(newClauses))
-	# #split + backtrack
-	# split=0
-	# presplitClauses=copy.deepcopy(newClauses)
-	# presplitTruthVals=truthVals.copy()
-	# presplitCounter=copy.deepcopy(elemCounter)
-	# while True:
-	# 	print(sat)
-	# 	if sat=="UNSAT":
-	# 		newClauses=copy.deepcopy(presplitClauses)
-	# 		truthVals=presplitTruthVals.copy()
-	# 		truthVals[split]=0
-	# 		elemCounter=copy.deepcopy(presplitCounter)
-	# 	elif sat==0:
-	# 		presplitClauses=copy.deepcopy(newClauses)
-	# 		presplitTruthVals=truthVals.copy()
-	# 		presplitCounter=copy.deepcopy(elemCounter)
-	# 	elif sat=="SAT":
-	# 		answer=[k for k,v in truthVals.items() if v == 1 and k>0]
-	# 		print(answer)
-	# 		print(len(answer))
-	# 		break
-	# 	while True:
-	# 		clause=newClauses[random.randint(0,len(newClauses)-1)]
-	# 		#print(newClauses)
-	# 		split=clause[random.randint(0,len(clause)-1)]
-	# 		splitCell=split//10
-	# 		truthCells=[k//10 for k,v in truthVals.items() if v==1 and k>0]
-	# 		#print('Filled Squares:',sorted([k for k,v in truthVals.items() if v==1 and k>0]))
-	# 		if splitCell not in truthCells:
-	# 			break
-	# 	truthVals[split]=1
-	# 	truthVals[split]=0
-	# 	newClauses, truthVals,sat = solveDp(newClauses,truthVals)
-	# 	print('Length of clauses after removal:',len(newClauses))
-	# 	print(len(truthVals))
