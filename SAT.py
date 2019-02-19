@@ -1,3 +1,4 @@
+
 from collections import Counter
 from itertools import chain
 import time
@@ -96,20 +97,19 @@ def removeTautology(clauses,counter):
 				removed = 1
 	except:
 		return clauses, removed
-	return clauses, counter, removed
+	return clauses, removed
 
 
-def removeUnitClauses(clauses, truthValues,counter):
+def removeUnitClauses(clauses, truthValues,counter,unitClauses):
 	removed = 0
-	unitClauses = []
 	#build unit clause list and remove units
 	try:
 		for i in range(len(clauses)):
 			if len(clauses[i])==1:
-				#check for L and not L being both unit cases
-				#TODO
 				unitClauses.append(clauses[i][0])
-
+				if -clauses[i][0] in unitClauses:
+					#print('UNSAT')
+					return 0,0,0,'UNSAT'
 				if clauses[i][0] > 0:
 					truthValues[abs(clauses[i][0])] = 1
 				else:
@@ -117,120 +117,227 @@ def removeUnitClauses(clauses, truthValues,counter):
 				removeFromCounter(clauses[i],counter)
 				del clauses[i]
 				removed = 1
-	except IndexError as e:
-		print(e)
-
-	#check if impossible
-	for unitClause1 in unitClauses:
-		for unitClause2 in unitClauses:
-			if unitClause1 == -unitClause2:
-				return 'UNSAT'
+	except Exception as e:
+		pass
+		#print(e)
 
 
-	for unitClause in unitClauses:
-		for idx1, clause in enumerate(clauses):
-			for idx2, elem in enumerate(clause):
-				#if an element of clause is known to be false, remove it
-				if elem == -unitClause:
-					removeFromCounter(elem,counter)
-					del clauses[idx1][idx2]
-					removed = 1
-				#if an element of clause is known to be true, remove clause
-				if elem == unitClause:
-					removeFromCounter(clause,counter)
-					del clauses[idx1]
-					removed = 1
-					break
-
-	return clauses, truthValues, counter, removed
 
 
-def removePurity(clauses, truthValues, elemCounter):
+	for idx1, clause in enumerate(clauses):
+		for idx2, elem in enumerate(clause):
+			#if an element of clause is known to be false, remove it
+			if -elem in  unitClauses:# or (elem in truthValues and truthValues[elem]==0):
+				removeFromCounter(elem,counter)
+				del clauses[idx1][idx2]
+				removed = 1
+			#if an element of clause is known to be true, remove clause
+			if elem in unitClauses:# or (elem in truthValues and truthValues[elem]==1):
+				removeFromCounter(clause,counter)
+				del clauses[idx1]
+				removed = 1
+				break
+
+	return clauses, truthValues, removed, unitClauses
+
+
+def removePurity(clauses, truthValues,elemCounter):
 	removed = 0
 	for idx,clause in enumerate(clauses):
 		for elem in clause:
 			#check if elem is pure
-			if elemCounter[elem] > 0 and elemCounter[-elem] == 0:
+			if elemCounter[elem] > 0 and elemCounter[-elem] == 0 and not abs(-elem) in truthValues:
+				#print(clause)
 				removed = 1
 				#assign its truth value
 				if elem>0:
 					truthValues[abs(elem)] = 1
 				else:
 					truthValues[abs(elem)] = 0
-				#remove clause from counter
-				removeFromCounter(clauses[idx], elemCounter)
 				#remove clause
 				del clauses[idx]
 				break
-	return clauses, truthValues, elemCounter, removed
+	return clauses, truthValues, removed
+
+def print_sudoku(true_vars):
+    """
+    Print sudoku.
+    :param true_vars: List of variables that your system assigned as true. Each var should be in the form of integers.
+    :return:
+    """
+    if len(true_vars) != 81:
+        print("Wrong number of variables.")
+        return
+    s = []
+    row = []
+    for i in range(len(true_vars)):
+        row.append(str(int(true_vars[i]) % 10))
+        if (i+1) % 9 == 0:
+            s.append(row)
+            row = []
+
+    print("╔═" + "═" + "═╦═" + "═" + "═╦═" + "═" + "═╦═" + "═" + "═╦═" + "═" + "═╦═" + "═" + "═╦═" + "═" + "═╦═" + "═" + "═╦═" + "═" + "═╗")
+    print("║ "+s[0][0]+" | "+s[0][1]+" | "+s[0][2]+" ║ "+s[0][3]+" | "+s[0][4]+" | "+s[0][5]+" ║ "+s[0][6]+" | "+s[0][7]+" | "+s[0][8]+" ║")
+    print("╠─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╣")
+    print("║ "+s[1][0]+" | "+s[1][1]+" | "+s[1][2]+" ║ "+s[1][3]+" | "+s[1][4]+" | "+s[1][5]+" ║ "+s[1][6]+" | "+s[1][7]+" | "+s[1][8]+" ║")
+    print("╠─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╣")
+    print("║ "+s[2][0]+" | "+s[2][1]+" | "+s[2][2]+" ║ "+s[2][3]+" | "+s[2][4]+" | "+s[2][5]+" ║ "+s[2][6]+" | "+s[2][7]+" | "+s[2][8]+" ║")
+    print("╠═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╣")
+    print("║ "+s[3][0]+" | "+s[3][1]+" | "+s[3][2]+" ║ "+s[3][3]+" | "+s[3][4]+" | "+s[3][5]+" ║ "+s[3][6]+" | "+s[3][7]+" | "+s[3][8]+" ║")
+    print("╠─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╣")
+    print("║ "+s[4][0]+" | "+s[4][1]+" | "+s[4][2]+" ║ "+s[4][3]+" | "+s[4][4]+" | "+s[4][5]+" ║ "+s[4][6]+" | "+s[4][7]+" | "+s[4][8]+" ║")
+    print("╠─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╣")
+    print("║ "+s[5][0]+" | "+s[5][1]+" | "+s[5][2]+" ║ "+s[5][3]+" | "+s[5][4]+" | "+s[5][5]+" ║ "+s[5][6]+" | "+s[5][7]+" | "+s[5][8]+" ║")
+    print("╠═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╬═" + "═" + "═╣")
+    print("║ "+s[6][0]+" | "+s[6][1]+" | "+s[6][2]+" ║ "+s[6][3]+" | "+s[6][4]+" | "+s[6][5]+" ║ "+s[6][6]+" | "+s[6][7]+" | "+s[6][8]+" ║")
+    print("╠─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╣")
+    print("║ "+s[7][0]+" | "+s[7][1]+" | "+s[7][2]+" ║ "+s[7][3]+" | "+s[7][4]+" | "+s[7][5]+" ║ "+s[7][6]+" | "+s[7][7]+" | "+s[7][8]+" ║")
+    print("╠─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╬─" + "─" + "─┼─" + "─" + "─┼─" + "─" + "─╣")
+    print("║ "+s[8][0]+" | "+s[8][1]+" | "+s[8][2]+" ║ "+s[8][3]+" | "+s[8][4]+" | "+s[8][5]+" ║ "+s[8][6]+" | "+s[8][7]+" | "+s[8][8]+" ║")
+    print("╚═" + "═" + "═╩═" + "═" + "═╩═" + "═" + "═╩═" + "═" + "═╩═" + "═" + "═╩═" + "═" + "═╩═" + "═" + "═╩═" + "═" + "═╩═" + "═" + "═╝")
+
+def check_sudoku(true_vars):
+    """
+    Check sudoku.
+    :param true_vars: List of variables that your system assigned as true. Each var should be in the form of integers.
+    :return:
+    """
+    import math as m
+    s = []
+    row = []
+    for i in range(len(true_vars)):
+        row.append(str(int(true_vars[i]) % 10))
+        if (i + 1) % 9 == 0:
+            s.append(row)
+            row = []
+
+    correct = True
+    for i in range(len(s)):
+        for j in range(len(s[0])):
+            for x in range(len(s)):
+                if i != x and s[i][j] == s[x][j]:
+                    correct = False
+                    print("Repeated value in column:", j)
+            for y in range(len(s[0])):
+                if j != y and s[i][j] == s[i][y]:
+                    correct = False
+                    print("Repeated value in row:", i)
+            top_left_x = int(i-i%m.sqrt(len(s)))
+            top_left_y = int(j-j%m.sqrt(len(s)))
+            for x in range(top_left_x, top_left_x + int(m.sqrt(len(s)))):
+                for y in range(top_left_y, top_left_y + int(m.sqrt(len(s)))):
+                    if i != x and j != y and s[i][j] == s[x][y]:
+                        correct = False
+                        print("Repeated value in cell:", (top_left_x, top_left_y))
+    return correct
+
+
+def get_cp(literal, elemCounter):
+	return elemCounter[literal]
+
+
+def get_cn(literal, elemCounter):
+	return elemCounter[-literal]
+
+
+def dlcs(elemCounter):
+	orderedLiteralList = sorted(list(elemCounter.keys()), key=lambda x: get_cp(x, elemCounter) + get_cn(x, elemCounter), 
+						reverse=True)
+	valsList = list(map(lambda x: [0,1] if get_cp(x, elemCounter) < get_cn(x, elemCounter) 
+						else [1,0], orderedLiteralList))
+	return orderedLiteralList, valsList
 
 
 @timeit
-def solveDp(clauses, truthValues,elemCounter):
+def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	'''
 	Given a set of rules, (sudoku rules + puzzle)
 	find a solution and return it. 
 	Uses DP algorithm
 	'''
-
+	#print(truthValues)
 	#Simplify clauses as much as possible
 	removed = 1
 	while removed:
 		removed = 0
 		#print('Original clauses with size >2: ',len([x for x in clauses if len(x)>2]))
-		clauses, elemCounter, removed = removeTautology(clauses,elemCounter)
+		clauses, removed = removeTautology(clauses,elemCounter)
 		#print('After tautology clauses with size >2: ',len([x for x in clauses if len(x)>2]))
-		clauses, truthValues, elemCounter, removed = removePurity(clauses, truthValues,elemCounter)
+		
 		#print('After purity clauses with size >2: ',len([x for x in clauses if len(x)>2]))
-		clauses, truthValues, elemCounter, removed = removeUnitClauses(clauses, truthValues,elemCounter)
+		clauses, truthValues, removed, unitClauses = removeUnitClauses(clauses, truthValues,elemCounter,unitClauses)
+		if unitClauses=="UNSAT":
+			return 0,0,"UNSAT"
+	clauses, truthValues, removed = removePurity(clauses, truthValues,elemCounter)
 	#Check termination conditions
 	if [] in clauses:
-		print('UNSAT')
+		#print('UNSAT []')
 		return clauses,truthValues,'UNSAT'
 	if not clauses:
-		print('SAT')
-		print(truthValues)
+		#print('SAT')
+		answer=sorted([k for k,v in truthValues.items() if v==1])
+		#print('ans=',answer)
+		#print(games[0])
+		#print(len(answer))
+		print_sudoku(answer)
+		print(check_sudoku(answer))
 		return clauses,truthValues,"SAT"
 
-	print("Len clauses:", len(clauses))
+	#print(len(clauses))
+	#print(len(truthValues))
 
-	if len(truthValues)==729:
-		# print(truthValues)
-		# print(games[0])
-		print(clauses)
-	#Backtrack boys
-	for literal in randomOrder:
+
+	if heuristic is not None:
+		order, valsList = heuristic(elemCounter)
+	else:
+		order = randomOrder
+
+	for idx,literal in enumerate(order):
 		#if literal already has truth assigned, skip it
 		if truthValues.get(literal) is not None:
 			continue
-		for val in [1,0]:
+
+		if heuristic is None:
+			valOrder = [1,0]
+		elif heuristic.__name__ == 'dlcs':
+			valOrder = valsList[idx]
+
+		for val in valOrder:
 			tempTruthVals = copy.deepcopy(truthValues)
 			tempClauses = copy.deepcopy(clauses)
 			tempCounter = copy.deepcopy(elemCounter)
-			
+			tempUnitClauses=copy.deepcopy(unitClauses)
 			tempTruthVals[literal] = val
-			# if val==1:
-				# tempClauses.append([literal,0])
-				# tempCounter[literal]=tempCounter[literal]+1
-			# else:
-				# tempClauses.append([-literal,0])
-				# tempCounter[-literal]=tempCounter[-literal]+1
+			if val==1:
+				tempClauses.append([literal])
+				tempCounter[literal]=tempCounter[literal]+1
+				tempUnitClauses.append(literal)
+				#print('literal picked: ',literal)
+			else:
+				tempClauses.append([-literal])
+				tempCounter[-literal]=tempCounter[-literal]+1
+				tempUnitClauses.append(-literal)
+				#print('literal picked: ',-literal)
 			#print(val,literal)
-			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter)
+			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter,tempUnitClauses, heuristic)
 			if sat=='SAT':
 				return 0,0,'SAT'
-
+			elif sat=="UNSAT" and val==0:
+				return tempClauses,tempTruthVals,"UNSAT"
 
 
 
 if __name__ == "__main__":
+	#random.seed(42)
 	sudokuRules = getRules()
 	games = readGames(r'test sudokus/1000 sudokus.txt')
-	game1 = sudokuRules + games[0]
-	print(len(game1))
-
-	c = Counter(list(chain(*game1)))
-	randomOrder = [k for k in c.keys() if k>0]
-	random.shuffle(randomOrder)
-	newClauses, truthVals, sat = solveDp(game1,{},c)
-	print(sat)
+	for i in range(0,len(games)):
+		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(games[i])
+		#print(len(game1))
+		c = Counter(list(chain(*game1)))
+		randomOrder = [k for k in c.keys() if k>0]
+		random.shuffle(randomOrder)
+		#print(randomOrder)
+		solveDp(game1,{},c,[], dlcs)
+		print('i: ',i)
+		#print(sat)
