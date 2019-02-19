@@ -229,7 +229,7 @@ def check_sudoku(true_vars):
                         correct = False
                         print("Repeated value in cell:", (top_left_x, top_left_y))
     return correct
-@timeit
+#@timeit
 def solveDp(clauses, truthValues,elemCounter, unitClauses):
 	'''
 	Given a set of rules, (sudoku rules + puzzle)
@@ -244,11 +244,12 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses):
 		#print('Original clauses with size >2: ',len([x for x in clauses if len(x)>2]))
 		clauses, removed = removeTautology(clauses,elemCounter)
 		#print('After tautology clauses with size >2: ',len([x for x in clauses if len(x)>2]))
-		clauses, truthValues, removed = removePurity(clauses, truthValues,elemCounter)
+		
 		#print('After purity clauses with size >2: ',len([x for x in clauses if len(x)>2]))
 		clauses, truthValues, removed, unitClauses = removeUnitClauses(clauses, truthValues,elemCounter,unitClauses)
 		if unitClauses=="UNSAT":
 			return 0,0,"UNSAT"
+	clauses, truthValues, removed = removePurity(clauses, truthValues,elemCounter)
 	#Check termination conditions
 	if [] in clauses:
 		#print('UNSAT []')
@@ -259,11 +260,13 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses):
 		#print('ans=',answer)
 		#print(games[0])
 		#print(len(answer))
-		#print_sudoku(answer)
+		print_sudoku(answer)
 		print(check_sudoku(answer))
 		return clauses,truthValues,"SAT"
 
 	#print(len(clauses))
+	print(len(truthValues))
+	random.shuffle(randomOrder)
 	for literal in randomOrder:
 		#if literal already has truth assigned, skip it
 		if truthValues.get(literal) is not None:
@@ -288,16 +291,18 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses):
 			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter,tempUnitClauses)
 			if sat=='SAT':
 				return 0,0,'SAT'
+			else:
+				return tempClauses,tempTruthVals,sat
 
 
 
 
 if __name__ == "__main__":
-	
+	#random.seed(42)
 	sudokuRules = getRules()
 	games = readGames(r'test sudokus/1000 sudokus.txt')
-	for i in range(0,2):
-		game1 = sudokuRules + games[i]
+	for i in range(0,len(games)):
+		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(games[i])
 		#print(len(game1))
 		c = Counter(list(chain(*game1)))
 		randomOrder = [k for k in c.keys() if k>0]
