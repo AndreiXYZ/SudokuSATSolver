@@ -1,10 +1,10 @@
+
 from collections import Counter
 from itertools import chain
 import time
 import random
 import copy
 import math
-import sys
 
 def timeit(f):
 	#decorator used to time functions
@@ -239,12 +239,12 @@ def get_cp(literal, elemCounter):
 def get_cn(literal, elemCounter):
 	return elemCounter[-literal]
 
-#@timeit
+
 def dlcs(elemCounter):
 	orderedLiteralList = sorted(list(elemCounter.keys()), key=lambda x: get_cp(x, elemCounter) + get_cn(x, elemCounter), 
 						reverse=True)
-	valsList = list(map(lambda x: [0] if get_cp(x, elemCounter) < get_cn(x, elemCounter) 
-						else [1], orderedLiteralList))
+	valsList = list(map(lambda x: [0,1] if get_cp(x, elemCounter) < get_cn(x, elemCounter) 
+						else [1,0], orderedLiteralList))
 	return orderedLiteralList, valsList
 
 
@@ -267,7 +267,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	clauses, truthValues, removed = removePurity(clauses, truthValues,elemCounter)
 	#Check termination conditions
 	if [] in clauses:
-		print('UNSAT []')
+		#print('UNSAT []')
 		return clauses,truthValues,'UNSAT'
 	if not clauses:
 		#print('SAT')
@@ -279,7 +279,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 		print(check_sudoku(answer))
 		return clauses,truthValues,"SAT"
 
-	print(len(clauses))
+	#print(len(clauses))
 	#print(len(truthValues))
 
 	if heuristic is not None:
@@ -291,6 +291,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 		#if literal already has truth assigned, skip it
 		if truthValues.get(literal) is not None:
 			continue
+
 		if heuristic is None:
 			valOrder = [1,0]
 		elif heuristic.__name__ == 'dlcs':
@@ -322,13 +323,9 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 
 if __name__ == "__main__":
 	#random.seed(42)
-	# args = sys.argv
-	# method = sys.argv[1][2]
-	# inputFile = sys.argv[2]
-	# print(method)
 	sudokuRules = getRules()
-	games = readGames('test sudokus/1000 sudokus.txt')
-	for i in range(10,11):
+	games = readGames(r'test sudokus/1000 sudokus.txt')
+	for i in range(0,len(games)):
 		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(games[i])
 		#print(len(game1))
 		c = Counter(list(chain(*game1)))
