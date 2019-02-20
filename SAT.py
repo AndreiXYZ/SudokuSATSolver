@@ -258,6 +258,12 @@ def dlis(elemCounter):
 						else [1,0], orderedLiteralList))
 	return orderedLiteralList, valsList
 					
+def diagonalsFirst(elemCounter):
+	posVals = [elem for elem in elemCounter.keys() if elem>0]
+	orderedLiteralList = sorted(posVals, key=lambda x: x%110<10,
+								reverse=True)
+	valsList=[[1,0] for i in range(0,len(orderedLiteralList))]
+	return orderedLiteralList,valsList
 @timeit
 def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	'''
@@ -343,6 +349,6 @@ if __name__ == "__main__":
 		randomOrder = [k for k in c.keys() if k>0]
 		random.shuffle(randomOrder)
 		#print(randomOrder)
-		solveDp(game1,{},c,[], dlis)
+		solveDp(game1,{},c,[], diagonalsFirst)
 		print('i: ',i)
 		#print(sat)
