@@ -241,7 +241,8 @@ def get_cn(literal, elemCounter):
 
 #@timeit
 def dlcs(elemCounter):
-	orderedLiteralList = sorted(list(elemCounter.keys()), key=lambda x: get_cp(x, elemCounter) + get_cn(x, elemCounter), 
+	posVals = [elem for elem in elemCounter.keys() if elem>0]
+	orderedLiteralList = sorted(posVals, key=lambda x: get_cp(x, elemCounter) + get_cn(x, elemCounter), 
 						reverse=True)
 	valsList = list(map(lambda x: [0] if get_cp(x, elemCounter) < get_cn(x, elemCounter) 
 						else [1], orderedLiteralList))
@@ -328,7 +329,7 @@ if __name__ == "__main__":
 	# print(method)
 	sudokuRules = getRules()
 	games = readGames('test sudokus/1000 sudokus.txt')
-	for i in range(10,11):
+	for i in range(0,len(games)):
 		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(games[i])
 		#print(len(game1))
 		c = Counter(list(chain(*game1)))
