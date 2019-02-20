@@ -260,11 +260,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	removed = 1
 	while removed:
 		removed = 0
-		#print('Original clauses with size >2: ',len([x for x in clauses if len(x)>2]))
 		clauses, removed = removeTautology(clauses,elemCounter)
-		#print('After tautology clauses with size >2: ',len([x for x in clauses if len(x)>2]))
-		
-		#print('After purity clauses with size >2: ',len([x for x in clauses if len(x)>2]))
 		clauses, truthValues, removed, unitClauses = removeUnitClauses(clauses, truthValues,elemCounter,unitClauses)
 		if unitClauses=="UNSAT":
 			return 0,0,"UNSAT"
@@ -321,7 +317,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter,tempUnitClauses, heuristic)
 			if sat=='SAT':
 				return 0,0,'SAT'
-			elif sat=="UNSAT" and val==0:
+			elif sat=="UNSAT" and val==valOrder[1]:
 				return tempClauses,tempTruthVals,"UNSAT"
 
 
@@ -336,6 +332,6 @@ if __name__ == "__main__":
 		randomOrder = [k for k in c.keys() if k>0]
 		random.shuffle(randomOrder)
 		#print(randomOrder)
-		solveDp(game1,{},c,[], dlcs)
+		solveDp(game1,{},c,[])
 		print('i: ',i)
 		#print(sat)
