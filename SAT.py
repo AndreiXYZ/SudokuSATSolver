@@ -264,6 +264,8 @@ def diagonalsFirst(elemCounter):
 								reverse=True)
 	valsList=[[1,0] for i in range(0,len(orderedLiteralList))]
 	return orderedLiteralList,valsList
+
+
 @timeit
 def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	'''
