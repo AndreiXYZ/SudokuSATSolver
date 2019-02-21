@@ -277,17 +277,20 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	'''
 	#print(truthValues)
 	#Simplify clauses as much as possible
+	global backtrackCounter
 	removed = 1
 	while removed:
 		removed = 0
 		clauses, removed = removeTautology(clauses,elemCounter)
 		clauses, truthValues, removed, unitClauses = removeUnitClauses(clauses, truthValues,elemCounter,unitClauses)
 		if unitClauses=="UNSAT":
+			backtrackCounter+=1
 			return 0,0,"UNSAT"
 	clauses, truthValues, removed = removePurity(clauses, truthValues,elemCounter)
 	#Check termination conditions
 	if [] in clauses:
 		#print('UNSAT []')
+		backtrackCounter+=1
 		return clauses,truthValues,'UNSAT'
 	if not clauses:
 		#print('SAT')
@@ -338,6 +341,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 			if sat=='SAT':
 				return 0,0,'SAT'
 			elif sat=="UNSAT" and val==valOrder[1]:
+				backtrackCounter+=1
 				return tempClauses,tempTruthVals,"UNSAT"
 
 
@@ -359,22 +363,33 @@ if __name__ == "__main__":
 	print(clausesPerGameCounter)
 	runtimes = []
 	print('dataset size=', len(balancedGames))
+	backtrackCounter=0
+	backtracks=[]
 	for i in range(0,len(balancedGames)):
 		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(balancedGames[i])
 		c = Counter(list(chain(*game1)))
 		randomOrder = [k for k in c.keys() if k>0]
 		random.shuffle(randomOrder)
+		#########diag first, comment out if not using############
+		posVals = [elem for elem in c.keys() if elem>0]
+		randomOrder = sorted(posVals, key=lambda x: x%110<10,
+								reverse=True)
+		#########################################################
 		t1 = time.process_time()
-		solveDp(game1,{},c,[], dlcs)
-
+		solveDp(game1,{},c,[])
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
+		backtracks.append((len(balancedGames[i]),backtrackCounter))
 		#print(len(balancedGames[i]))
 		print('i: ',i)
+		print('btc: ',backtrackCounter)
+		backtrackCounter=0
 	
 	xvals, yvals = zip(*runtimes)
 	plt.plot(xvals, yvals, 'ro')
 	plt.show()
-
-	with open('runtimes_dlcs.pkl', 'wb') as f:
+	
+	with open('runtimes_diag.pkl', 'wb') as f:
+		pickle.dump(runtimes, f)
+	with open('backtrack_diag.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
