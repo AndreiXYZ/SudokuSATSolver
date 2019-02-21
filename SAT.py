@@ -371,9 +371,9 @@ if __name__ == "__main__":
 		randomOrder = [k for k in c.keys() if k>0]
 		random.shuffle(randomOrder)
 		#########diag first, comment out if not using############
-		posVals = [elem for elem in c.keys() if elem>0]
-		randomOrder = sorted(posVals, key=lambda x: x%110<10,
-								reverse=True)
+		# posVals = [elem for elem in c.keys() if elem>0]
+		# randomOrder = sorted(posVals, key=lambda x: x%110<10,
+		# 						reverse=True)
 		#########################################################
 		t1 = time.process_time()
 		solveDp(game1,{},c,[])
@@ -389,7 +389,7 @@ if __name__ == "__main__":
 	plt.plot(xvals, yvals, 'ro')
 	plt.show()
 	
-	with open('runtimes_diag.pkl', 'wb') as f:
+	with open('runtimes_random.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
-	with open('backtrack_diag.pkl', 'wb') as f:
-		pickle.dump(runtimes, f)
+	with open('backtrack_random.pkl', 'wb') as f:
+		pickle.dump(backtracks, f)
