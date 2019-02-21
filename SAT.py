@@ -366,6 +366,7 @@ if __name__ == "__main__":
 		random.shuffle(randomOrder)
 		t1 = time.process_time()
 		solveDp(game1,{},c,[], dlcs)
+
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		#print(len(balancedGames[i]))
