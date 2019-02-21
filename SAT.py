@@ -389,7 +389,11 @@ if __name__ == "__main__":
 	plt.plot(xvals, yvals, 'ro')
 	plt.show()
 	
+	xvals2, yvals2 = zip(*backtracks)
+	plt.plot(xvals2, yvals2, 'ro')
+	plt.show()
+	
 	with open('runtimes_diag.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
 	with open('backtrack_diag.pkl', 'wb') as f:
-		pickle.dump(runtimes, f)
+		pickle.dump(backtracks, f)
