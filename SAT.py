@@ -365,7 +365,7 @@ if __name__ == "__main__":
 		randomOrder = [k for k in c.keys() if k>0]
 		random.shuffle(randomOrder)
 		t1 = time.process_time()
-		solveDp(game1,{},c,[])
+		solveDp(game1,{},c,[], dlcs)
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		#print(len(balancedGames[i]))
@@ -374,6 +374,6 @@ if __name__ == "__main__":
 	xvals, yvals = zip(*runtimes)
 	plt.plot(xvals, yvals, 'ro')
 	plt.show()
-	
-	with open('runtimes_random.pkl', 'wb') as f:
+
+	with open('runtimes_dlcs.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
