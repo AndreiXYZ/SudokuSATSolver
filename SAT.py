@@ -380,11 +380,8 @@ if __name__ == "__main__":
 		#print(randomOrder)
 		#########################################################
 		t1 = time.process_time()
-<<<<<<< HEAD
 		solveDp(game1,{},c,[],jeroslow)
-=======
 		solveDp(game1,{},c,[])
->>>>>>> 1f2e970941ec7e831b3a379b06bc8e3c29364928
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
@@ -401,13 +398,10 @@ if __name__ == "__main__":
 	plt.plot(xvals2, yvals2, 'ro')
 	plt.show()
 	
-<<<<<<< HEAD
 	with open('runtimes_jeroslow.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
 	with open('backtrack_jeroslow.pkl', 'wb') as f:
-=======
 	with open('runtimes_randoms.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
 	with open('backtrack_randoms.pkl', 'wb') as f:
->>>>>>> 1f2e970941ec7e831b3a379b06bc8e3c29364928
 		pickle.dump(backtracks, f)
