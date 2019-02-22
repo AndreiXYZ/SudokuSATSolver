@@ -238,17 +238,24 @@ def get_cp(literal, elemCounter):
 	return elemCounter[literal]
 
 
-def get_cn(literal, elemCounter):
-	return elemCounter[-literal]
 
-
-def dlcs(elemCounter):
-	posVals = [elem for elem in elemCounter.keys() if elem>0]
-	orderedLiteralList = sorted(posVals, key=lambda x: get_cp(x, elemCounter) + get_cn(x, elemCounter), 
+def jeroslow(elemCounter,clauses):
+	unitClauseCount={}
+	for clause in clauses:
+		for elem in clause:
+			if elem in unitClauseCount:
+				unitClauseCount[elem].append(len(clause))
+			else:
+				unitClauseCount[elem]=[len(clause)]
+	for key in unitClauseCount.keys():
+		sum=0
+		for num in unitClauseCount[key]:
+			sum+=2**(-len(unitClauseCount[key]))
+		unitClauseCount[key]=sum
+	orderedLiteralList = sorted(list(unitClauseCount.keys()), key=lambda x: unitClauseCount[x], 
 						reverse=True)
-	valsList = list(map(lambda x: [0,1] if get_cp(x, elemCounter) < get_cn(x, elemCounter) 
-						else [1,0], orderedLiteralList))
-	return orderedLiteralList, valsList
+	return orderedLiteralList,[[1,0] for i in range(len(orderedLiteralList))]
+
 
 
 def dlis(elemCounter):
@@ -300,7 +307,10 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 	#print(len(truthValues))
 
 	if heuristic is not None:
-		order, valsList = heuristic(elemCounter)
+		if heuristic.__name__=='jeroslow':
+			order, valsList=heuristic(elemCounter,clauses)
+		else:
+			order, valsList = heuristic(elemCounter)
 	else:
 		order = randomOrder
 
@@ -370,7 +380,11 @@ if __name__ == "__main__":
 		#print(randomOrder)
 		#########################################################
 		t1 = time.process_time()
+<<<<<<< HEAD
+		solveDp(game1,{},c,[],jeroslow)
+=======
 		solveDp(game1,{},c,[])
+>>>>>>> 1f2e970941ec7e831b3a379b06bc8e3c29364928
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
@@ -387,7 +401,13 @@ if __name__ == "__main__":
 	plt.plot(xvals2, yvals2, 'ro')
 	plt.show()
 	
+<<<<<<< HEAD
+	with open('runtimes_jeroslow.pkl', 'wb') as f:
+		pickle.dump(runtimes, f)
+	with open('backtrack_jeroslow.pkl', 'wb') as f:
+=======
 	with open('runtimes_randoms.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
 	with open('backtrack_randoms.pkl', 'wb') as f:
+>>>>>>> 1f2e970941ec7e831b3a379b06bc8e3c29364928
 		pickle.dump(backtracks, f)
