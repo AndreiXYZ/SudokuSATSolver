@@ -260,12 +260,6 @@ def dlis(elemCounter):
 						else [1,0], orderedLiteralList))
 	return orderedLiteralList, valsList
 					
-def diagonalsFirst(elemCounter):
-	posVals = [elem for elem in elemCounter.keys() if elem>0]
-	orderedLiteralList = sorted(posVals, key=lambda x: x%110<10,
-								reverse=True)
-	valsList=[[1,0] for i in range(0,len(orderedLiteralList))]
-	return orderedLiteralList,valsList
 
 
 @timeit
@@ -321,10 +315,10 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 			valOrder = valsList[idx]
 		
 		for val in valOrder:
-			tempTruthVals = copy.deepcopy(truthValues)
-			tempClauses = copy.deepcopy(clauses)
-			tempCounter = copy.deepcopy(elemCounter)
-			tempUnitClauses=copy.deepcopy(unitClauses)
+			tempTruthVals = truthValues.copy()
+			tempClauses = [row[:] for row in clauses]
+			tempCounter = elemCounter.copy()
+			tempUnitClauses=unitClauses[:]
 			tempTruthVals[literal] = val
 			if val==1:
 				tempClauses.append([literal])
@@ -369,14 +363,15 @@ if __name__ == "__main__":
 		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(balancedGames[i])
 		c = Counter(list(chain(*game1)))
 		randomOrder = [k for k in c.keys() if k>0]
-		random.shuffle(randomOrder)
 		#########diag first, comment out if not using############
-		# posVals = [elem for elem in c.keys() if elem>0]
-		# randomOrder = sorted(posVals, key=lambda x: x%110<10,
-		# 						reverse=True)
+		#posVals = [elem for elem in c.keys() if elem>0]
+		#randomOrder = sorted(posVals, key=lambda x: x%110<10,
+		#						reverse=True)
+		#randomOrder = sorted(posVals, key=lambda x: (x//100)+(x//10)%10==10,reverse=True)
+		#print(randomOrder)
 		#########################################################
 		t1 = time.process_time()
-		solveDp(game1,{},c,[], dlcs)
+		solveDp(game1,{},c,[],dlcs)
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
