@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.stats.stats import pearsonr
 
 
-with open('runtimes_dlis.pkl', 'rb') as f:
+with open('backtrack_random.pkl', 'rb') as f:
 	runtimes = pickle.load(f)
 
 xvals, yvals = zip(*runtimes)

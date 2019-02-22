@@ -376,7 +376,7 @@ if __name__ == "__main__":
 		# 						reverse=True)
 		#########################################################
 		t1 = time.process_time()
-		solveDp(game1,{},c,[])
+		solveDp(game1,{},c,[], dlcs)
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
@@ -389,7 +389,11 @@ if __name__ == "__main__":
 	plt.plot(xvals, yvals, 'ro')
 	plt.show()
 	
-	with open('runtimes_random.pkl', 'wb') as f:
+	xvals2, yvals2 = zip(*backtracks)
+	plt.plot(xvals2, yvals2, 'ro')
+	plt.show()
+	
+	with open('runtimes_dlcs.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
-	with open('backtrack_random.pkl', 'wb') as f:
+	with open('backtrack_dlcs.pkl', 'wb') as f:
 		pickle.dump(backtracks, f)
