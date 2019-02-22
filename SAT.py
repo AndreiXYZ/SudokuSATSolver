@@ -369,14 +369,15 @@ if __name__ == "__main__":
 		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(balancedGames[i])
 		c = Counter(list(chain(*game1)))
 		randomOrder = [k for k in c.keys() if k>0]
-		random.shuffle(randomOrder)
 		#########diag first, comment out if not using############
-		posVals = [elem for elem in c.keys() if elem>0]
-		randomOrder = sorted(posVals, key=lambda x: x%110<10,
-								reverse=True)
+		#posVals = [elem for elem in c.keys() if elem>0]
+		#randomOrder = sorted(posVals, key=lambda x: x%110<10,
+		#						reverse=True)
+		#randomOrder = sorted(posVals, key=lambda x: (x//100)+(x//10)%10==10,reverse=True)
+		#print(randomOrder)
 		#########################################################
 		t1 = time.process_time()
-		solveDp(game1,{},c,[])
+		solveDp(game1,{},c,[],dlis)
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
@@ -393,7 +394,7 @@ if __name__ == "__main__":
 	plt.plot(xvals2, yvals2, 'ro')
 	plt.show()
 	
-	with open('runtimes_diag.pkl', 'wb') as f:
+	with open('runtimes_dlis.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
-	with open('backtrack_diag.pkl', 'wb') as f:
+	with open('backtrack_dlis.pkl', 'wb') as f:
 		pickle.dump(backtracks, f)
