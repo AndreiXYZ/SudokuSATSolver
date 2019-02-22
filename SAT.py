@@ -365,13 +365,12 @@ if __name__ == "__main__":
 		randomOrder = [k for k in c.keys() if k>0]
 		#########diag first, comment out if not using############
 		#posVals = [elem for elem in c.keys() if elem>0]
-		#randomOrder = sorted(posVals, key=lambda x: x%110<10,
-		#						reverse=True)
-		#randomOrder = sorted(posVals, key=lambda x: (x//100)+(x//10)%10==10,reverse=True)
+		#randomOrder = sorted(posVals, key=lambda x: x%110<10 or (x//100)+(x//10)%10==10
+								# ,reverse=True)
 		#print(randomOrder)
 		#########################################################
 		t1 = time.process_time()
-		solveDp(game1,{},c,[],dlcs)
+		solveDp(game1,{},c,[])
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
@@ -388,7 +387,7 @@ if __name__ == "__main__":
 	plt.plot(xvals2, yvals2, 'ro')
 	plt.show()
 	
-	with open('runtimes_dlcs.pkl', 'wb') as f:
+	with open('runtimes_randoms.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
-	with open('backtrack_dlcs.pkl', 'wb') as f:
+	with open('backtrack_randoms.pkl', 'wb') as f:
 		pickle.dump(backtracks, f)
