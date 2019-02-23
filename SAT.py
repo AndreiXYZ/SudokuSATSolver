@@ -380,7 +380,7 @@ if __name__ == "__main__":
 		#print(randomOrder)
 		#########################################################
 		t1 = time.process_time()
-		solveDp(game1,{},c,[],dlis)
+		solveDp(game1,{},c,[])
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
@@ -397,7 +397,7 @@ if __name__ == "__main__":
 	plt.plot(xvals2, yvals2, 'ro')
 	plt.show()
 	
-	with open('runtimes_dlis.pkl', 'wb') as f:
+	with open('runtimes_random.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
-	with open('backtrack_dlis.pkl', 'wb') as f:
+	with open('backtrack_random.pkl', 'wb') as f:
 		pickle.dump(backtracks,f)
