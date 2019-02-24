@@ -241,6 +241,7 @@ def get_cn(literal,elemCounter):
 	return elemCounter[-literal]
 
 def jeroslow(elemCounter,clauses):
+	start_time = time.process_time()
 	unitClauseCount={}
 	for clause in clauses:
 		for elem in clause:
@@ -255,6 +256,8 @@ def jeroslow(elemCounter,clauses):
 		unitClauseCount[key]=s
 	orderedLiteralList = sorted(list(unitClauseCount.keys()), key=lambda x: unitClauseCount[x], 
 						reverse=True)
+	#print('oll: ',orderedLiteralList)
+	#print('rand: ',[k for k in elemCounter.keys() if k>0])
 	return orderedLiteralList,[[1,0] for i in range(len(orderedLiteralList))]
 
 
@@ -314,7 +317,7 @@ def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
 			order, valsList = heuristic(elemCounter)
 	else:
 		order = randomOrder
-
+		
 	for idx,literal in enumerate(order):
 		#if literal already has truth assigned, skip it
 		if truthValues.get(literal) is not None:
@@ -374,13 +377,14 @@ if __name__ == "__main__":
 		game1 = copy.deepcopy(sudokuRules) + copy.deepcopy(balancedGames[i])
 		c = Counter(list(chain(*game1)))
 		randomOrder = [k for k in c.keys() if k>0]
+		random.shuffle(randomOrder)
 		#########diag first, comment out if not using############
 		#posVals = [elem for elem in c.keys() if elem>0]
 		#randomOrder = sorted(posVals, key=lambda x: x%110<10 or (x//100)+(x//10)%10==10,reverse=True)
 		#print(randomOrder)
 		#########################################################
 		t1 = time.process_time()
-		solveDp(game1,{},c,[],jeroslow)
+		solveDp(game1,{},c,[])
 		t2 = time.process_time()
 		runtimes.append((len(balancedGames[i]), t2-t1))
 		backtracks.append((len(balancedGames[i]),backtrackCounter))
@@ -397,7 +401,7 @@ if __name__ == "__main__":
 	plt.plot(xvals2, yvals2, 'ro')
 	plt.show()
 	
-	with open('runtimes_jeroslow.pkl', 'wb') as f:
+	with open('runtimes_random.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)
-	with open('backtrack_jeroslow.pkl', 'wb') as f:
+	with open('backtrack_random.pkl', 'wb') as f:
 		pickle.dump(backtracks,f)
