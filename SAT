@@ -1,4 +1,4 @@
-#!/home/apo/anaconda3/bin/python
+#!/usr/bin/python
 from experiments import *
 import sys
 
