@@ -59,8 +59,8 @@ def getStats(heuristic, metric):
 	plt.plot(xvals, yvals, 'bo')
 	plt.show()
 	#Run Pearson on data without outliers
-	# corr, pval = pearsonr(xvals, yvals)
-	corr, pval = spearmanr(xvals, yvals)
+	corr, pval = pearsonr(xvals, yvals)
+	# corr, pval = spearmanr(xvals, yvals)
 	# corr, pval = kendalltau(xvals, yvals)
 	print(f'No outliers: corr= {corr}, pval= {pval}')
 	#Run Pearson test on original data
@@ -70,7 +70,7 @@ def getStats(heuristic, metric):
 	print('-'*50)
 
 metrics = ['backtrack', 'runtimes']
-heuristics = ['randoms', 'jeroslow', 'diag', 'dlis']
+heuristics = ['random', 'jeroslow', 'diag', 'dlis']
 
 for metric in metrics:
 	for heuristic in heuristics:

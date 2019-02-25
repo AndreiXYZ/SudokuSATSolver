@@ -393,13 +393,13 @@ if __name__ == "__main__":
 		print('btc: ',backtrackCounter)
 		backtrackCounter=0
 	
-	xvals, yvals = zip(*runtimes)
-	plt.plot(xvals, yvals, 'ro')
-	plt.show()
+	# xvals, yvals = zip(*runtimes)
+	# plt.plot(xvals, yvals, 'ro')
+	# plt.show()
 	
-	xvals2, yvals2 = zip(*backtracks)
-	plt.plot(xvals2, yvals2, 'ro')
-	plt.show()
+	# xvals2, yvals2 = zip(*backtracks)
+	# plt.plot(xvals2, yvals2, 'ro')
+	# plt.show()
 	
 	with open('runtimes_random.pkl', 'wb') as f:
 		pickle.dump(runtimes, f)

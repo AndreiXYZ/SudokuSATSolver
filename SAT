@@ -1,0 +1,144 @@
+#!/home/apo/anaconda3/bin/python
+from experiments import *
+import sys
+
+def getRulesFrom(filename):
+	'''
+	Get the general rules of sudoku.
+	Format is [[rule1], [rule2], [rule3], ...]
+	where each rule is a cnf clause (example: [-112,-113])
+	'''
+	rules = []
+	with open(filename, 'r') as f:
+		#one rule per line
+		for line in f:
+			rule = line.split()
+			if rule[0] == 'p':
+				numVars = rule[2]
+				numClauses = rule[3]
+			elif rule[0] not in ('p', 'c'):
+				#map to ints
+				rule = list(map(int, rule[:-1]))
+				#add rule to our list of rules
+				rules.append(rule)
+	return rules
+
+
+@timeit
+def solveDp(clauses, truthValues,elemCounter, unitClauses, heuristic=None):
+	'''
+	Given a set of rules, (sudoku rules + puzzle)
+	find a solution and return it. 
+	Uses DP algorithm
+	'''
+	#print(truthValues)
+	#Simplify clauses as much as possible
+	global backtrackCounter
+	removed = 1
+	while removed:
+		removed = 0
+		clauses, removed = removeTautology(clauses,elemCounter)
+		clauses, truthValues, removed, unitClauses = removeUnitClauses(clauses, truthValues,elemCounter,unitClauses)
+		if unitClauses=="UNSAT":
+			backtrackCounter+=1
+			return 0,0,"UNSAT"
+	clauses, truthValues, removed = removePurity(clauses, truthValues,elemCounter)
+	#Check termination conditions
+	if [] in clauses:
+		#print('UNSAT []')
+		backtrackCounter+=1
+		return clauses,truthValues,'UNSAT'
+	if not clauses:
+		#print('SAT')
+		answer=sorted([k for k,v in truthValues.items() if v==1])
+		#print('ans=',answer)
+		#print(games[0])
+		#print(len(answer))
+		print_sudoku(answer)
+		print(check_sudoku(answer))
+		return clauses,truthValues,"SAT"
+
+	#print(len(clauses))
+	#print(len(truthValues))
+
+	if heuristic is not None:
+		if heuristic.__name__=='jeroslow':
+			order, valsList=heuristic(elemCounter,clauses)
+		else:
+			order, valsList = heuristic(elemCounter)
+	else:
+		order = randomOrder
+		
+	for idx,literal in enumerate(order):
+		#if literal already has truth assigned, skip it
+		if truthValues.get(literal) is not None:
+			continue
+
+		if heuristic is None:
+			valOrder = [1,0]
+		else:
+			valOrder = valsList[idx]
+		
+		for val in valOrder:
+			tempTruthVals = truthValues.copy()
+			tempClauses = [row[:] for row in clauses]
+			tempCounter = elemCounter.copy()
+			tempUnitClauses=unitClauses[:]
+			tempTruthVals[literal] = val
+			if val==1:
+				tempClauses.append([literal])
+				tempCounter[literal]=tempCounter[literal]+1
+				tempUnitClauses.append(literal)
+				#print('literal picked: ',literal)
+			else:
+				tempClauses.append([-literal])
+				tempCounter[-literal]=tempCounter[-literal]+1
+				tempUnitClauses.append(-literal)
+				#print('literal picked: ',-literal)
+			#print(val,literal)
+			tempClauses, tempTruthVals, sat = solveDp(tempClauses, tempTruthVals,tempCounter,tempUnitClauses, heuristic)
+			if sat=='SAT':
+				return 0,0,'SAT'
+			elif sat=="UNSAT" and val==valOrder[1]:
+				backtrackCounter+=1
+				return tempClauses,tempTruthVals,"UNSAT"
+
+
+if __name__ == "__main__":
+
+
+	methodNum = int(sys.argv[1][2])
+	filename = sys.argv[2]
+	print(f'method: {methodNum}, input file: {filename}')
+
+	random.seed(42)
+	
+	rules = getRulesFrom('testfile.txt')
+
+	c = Counter(list(chain(*rules)))
+	backtrackCounter=0
+
+	randomOrder = [k for k in c.keys() if k>0]
+	random.shuffle(randomOrder)
+
+	assert 0 < methodNum < 5, 'Please input a number from 1 to 4 for the method number.'
+
+	if methodNum == 1:
+		print('Running Davis-Putnam with random splits')
+		solveDp(rules, {}, c, [])
+	elif methodNum == 2:
+		print('Running Davis-Putnam using Jeroslow-Wang heuristic.')
+		solveDp(rules, {}, c, [], jeroslow)
+	elif methodNum == 3:
+		print('Running Davis-Putnam using DLIS heuristic.')
+		solveDp(rules, {}, c, [], jeroslow)
+	elif methodNum == 4:
+		print('Running Davis-Putanm using custom (diagonals first) heuristic.')
+		#########diag first, comment out if not using############
+		posVals = [elem for elem in c.keys() if elem>0]
+		randomOrder = sorted(posVals, key=lambda x: x%110<10 or (x//100)+(x//10)%10==10,reverse=True)
+		solveDp(rules, {}, c, [])
+		#########################################################
+
+
+	print('Number of backtracks performed: ',backtrackCounter)
