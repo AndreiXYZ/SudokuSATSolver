@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
 	random.seed(42)
 	
-	rules = getRulesFrom('testfile.txt')
+	rules = getRulesFrom(filename)
 
 	c = Counter(list(chain(*rules)))
 	backtrackCounter=0
@@ -131,7 +131,7 @@ if __name__ == "__main__":
 		solveDp(rules, {}, c, [], jeroslow)
 	elif methodNum == 3:
 		print('Running Davis-Putnam using DLIS heuristic.')
-		solveDp(rules, {}, c, [], jeroslow)
+		solveDp(rules, {}, c, [], dlis)
 	elif methodNum == 4:
 		print('Running Davis-Putanm using custom (diagonals first) heuristic.')
 		#########diag first, comment out if not using############
@@ -139,6 +139,3 @@ if __name__ == "__main__":
 		randomOrder = sorted(posVals, key=lambda x: x%110<10 or (x//100)+(x//10)%10==10,reverse=True)
 		solveDp(rules, {}, c, [])
 		#########################################################
-
-
-	print('Number of backtracks performed: ',backtrackCounter)
